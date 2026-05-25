@@ -1,0 +1,6 @@
+{
+  "name": "Afro Baobab Cultural Hub",
+  "description": "An immersive cultural destination in Dubai offering rotating exhibitions, storytelling, rhythm, movement, and culinary experiences.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

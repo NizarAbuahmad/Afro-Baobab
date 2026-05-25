@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  
+  --color-clay: #CB6A4A;
+  --color-sand: #E7D6BA;
+  --color-terracotta: #A64836;
+  --color-moss: #55624A;
+  --color-indigo: #1F2A44;
+  --color-charcoal: #222222;
+  --color-ivory: #F6F3EE;
+  --color-warm-white: #FAF8F4;
+}
+
+/* Extra animations / utility styles matching original */
+@keyframes orb1 {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-28px) scale(1.04); }
+}
+
+@keyframes orb2 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(18px); }
+}
+
+.animate-orb1 {
+  animation: orb1 9s ease-in-out infinite;
+}
+
+.animate-orb2 {
+  animation: orb2 11s ease-in-out infinite;
+}
+
+/* Authentic Afro-Geometric SVG Background Patterns */
+.bg-pattern-mudcloth {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 30 L30 0 L60 30 L30 60 Z' fill='none' stroke='%23CB6A4A' stroke-width='1' opacity='0.08'/%3E%3Cpath d='M9 21 L21 9 M9 39 L21 51 M51 21 L39 9 M51 39 L39 51' fill='none' stroke='%23A64836' stroke-width='1.5' stroke-linecap='round' opacity='0.06'/%3E%3Cpath d='M15 30 h30 M30 15 v30' fill='none' stroke='%23CB6A4A' stroke-width='0.75' stroke-dasharray='4 4' opacity='0.06'/%3E%3Ccircle cx='30' cy='30' r='2' fill='%23A64836' opacity='0.12'/%3E%3C/svg%3E");
+}
+
+.bg-pattern-kente {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cpath d='M0 0 L40 40 M40 0 L80 40' fill='none' stroke='%23E7D6BA' stroke-width='1.5' opacity='0.08'/%3E%3Cpath d='M10 5 h20 M10 12 h20 M10 19 h20' fill='none' stroke='%23CB6A4A' stroke-width='1' opacity='0.07'/%3E%3Cpath d='M50 21 v14 M58 21 v14 M66 21 v14' fill='none' stroke='%23A64836' stroke-width='1' opacity='0.07'/%3E%3Cpath d='M0 20 h80' fill='none' stroke='%23CB6A4A' stroke-dasharray='2 5' stroke-width='1' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* Subtle hand-drawn border effect for artistic cards */
+.clay-inset-border {
+  position: relative;
+}
+.clay-inset-border::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed rgba(203, 106, 74, 0.25);
+  pointer-events: none;
+  z-index: 10;
+  border-radius: 2px;
+}
+
+/* Custom Scroll Lock and general helpers */
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: #CB6A4A;
+  color: white;
+}
