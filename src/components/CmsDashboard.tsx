@@ -5,6 +5,18 @@ import {
   BookOpen, Calendar, HelpCircle, Mail, Phone,
   Bookmark, Edit3, ArrowRight, ShieldCheck, Lock, Unlock 
 } from "lucide-react";
+import {
+  cmsLogin,
+  updateCmsHeader,
+  saveCmsExperience,
+  deleteCmsExperience,
+  saveCmsExhibition,
+  deleteCmsExhibition,
+  saveCmsEvent,
+  deleteCmsEvent,
+  updateCmsBookingStatus,
+  deleteCmsBooking
+} from "../lib/cmsClient";
 
 interface CmsDashboardProps {
   isOpen: boolean;
@@ -36,17 +48,43 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [footerTagline, setFooterTagline] = useState("");
   const [tickerInput, setTickerInput] = useState("");
   
+  // Custom design states
+  const [logoTextPrimary, setLogoTextPrimary] = useState("");
+  const [logoTextSecondary, setLogoTextSecondary] = useState("");
+  const [logoSub, setLogoSub] = useState("");
+  const [logoMode, setLogoMode] = useState<"default-emblem" | "custom-text" | "image-url">("default-emblem");
+  const [logoImageUrl, setLogoImageUrl] = useState("");
+  const [logoEmblemColor, setLogoEmblemColor] = useState("");
+
+  const [heroWallpaperMode, setHeroWallpaperMode] = useState<"sunrise-tribal" | "geometric-mesh" | "minimalist-gradient" | "custom-image">("sunrise-tribal");
+  const [heroWallpaperUrl, setHeroWallpaperUrl] = useState("");
+  const [heroGradientStart, setHeroGradientStart] = useState("");
+  const [heroGradientEnd, setHeroGradientEnd] = useState("");
+
+  const [aboutLabel, setAboutLabel] = useState("");
+  const [aboutHeading, setAboutHeading] = useState("");
+  const [aboutDesc1, setAboutDesc1] = useState("");
+  const [aboutDesc2, setAboutDesc2] = useState("");
+  const [aboutBtnText, setAboutBtnText] = useState("");
+  const [aboutFeaturedBadge, setAboutFeaturedBadge] = useState("");
+  const [aboutFeaturedTitle, setAboutFeaturedTitle] = useState("");
+  const [aboutFeaturedDesc, setAboutFeaturedDesc] = useState("");
+  const [aboutFeaturedImageMode, setAboutFeaturedImageMode] = useState<"pattern" | "custom-image">("pattern");
+  const [aboutFeaturedImageUrl, setAboutFeaturedImageUrl] = useState("");
+
   // Dynamic Item states
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [expTitle, setExpTitle] = useState("");
   const [expDesc, setExpDesc] = useState("");
   const [expNum, setExpNum] = useState("");
+  const [expImageUrl, setExpImageUrl] = useState("");
 
   const [exhBadge, setExhBadge] = useState("");
   const [exhTitle, setExhTitle] = useState("");
   const [exhType, setExhType] = useState("");
   const [exhStatus, setExhStatus] = useState("");
   const [exhIsNow, setExhIsNow] = useState(false);
+  const [exhImageUrl, setExhImageUrl] = useState("");
 
   const [evDay, setEvDay] = useState("");
   const [evMonth, setEvMonth] = useState("");
@@ -55,15 +93,42 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [evTime, setEvTime] = useState("");
   const [evAudience, setEvAudience] = useState("");
   const [evTheme, setEvTheme] = useState<'clay' | 'moss' | 'indigo'>("clay");
+  const [evImageUrl, setEvImageUrl] = useState("");
 
   // Load Initial states when data loads
   useEffect(() => {
     if (data) {
-      setHeroTitle(data.header.heroTitle);
-      setHeroSub(data.header.heroSub);
-      setFooterDesc(data.header.footerDesc);
-      setFooterTagline(data.header.footerTagline);
-      setTickerInput(data.header.tickerItems.join(", "));
+      setHeroTitle(data.header.heroTitle || "");
+      setHeroSub(data.header.heroSub || "");
+      setFooterDesc(data.header.footerDesc || "");
+      setFooterTagline(data.header.footerTagline || "");
+      setTickerInput((data.header.tickerItems || []).join(", "));
+
+      // Brand Logo customizer initial values
+      setLogoTextPrimary(data.header.logoTextPrimary || "AFRO");
+      setLogoTextSecondary(data.header.logoTextSecondary || "BAOBAB");
+      setLogoSub(data.header.logoSub || "CULTURAL HUB & ART GALLERY");
+      setLogoMode(data.header.logoMode || "default-emblem");
+      setLogoImageUrl(data.header.logoImageUrl || "");
+      setLogoEmblemColor(data.header.logoEmblemColor || "#CB6A4A");
+
+      // Background shapes initial values
+      setHeroWallpaperMode(data.header.heroWallpaperMode || "sunrise-tribal");
+      setHeroWallpaperUrl(data.header.heroWallpaperUrl || "");
+      setHeroGradientStart(data.header.heroGradientStart || "#160e07");
+      setHeroGradientEnd(data.header.heroGradientEnd || "#141d30");
+
+      // Story block initial values
+      setAboutLabel(data.header.aboutLabel || "Our Story");
+      setAboutHeading(data.header.aboutHeading || "");
+      setAboutDesc1(data.header.aboutDesc1 || "");
+      setAboutDesc2(data.header.aboutDesc2 || "");
+      setAboutBtnText(data.header.aboutBtnText || "Explore Experience Zones");
+      setAboutFeaturedBadge(data.header.aboutFeaturedBadge || "Featured Immersive Zone");
+      setAboutFeaturedTitle(data.header.aboutFeaturedTitle || "");
+      setAboutFeaturedDesc(data.header.aboutFeaturedDesc || "");
+      setAboutFeaturedImageMode(data.header.aboutFeaturedImageMode || "pattern");
+      setAboutFeaturedImageUrl(data.header.aboutFeaturedImageUrl || "");
     }
   }, [data]);
 
@@ -76,23 +141,12 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
     setAuthError("");
 
     try {
-      const res = await fetch("/api/cms/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        localStorage.setItem("afro_baobab_cms_session", result.token);
-        setSessionToken(result.token);
-        onRefresh();
-      } else {
-        const errResult = await res.json();
-        setAuthError(errResult.error || "Incorrect login credentials.");
-      }
-    } catch (err) {
-      setAuthError("Failed to communicate with authentication server.");
+      const result = await cmsLogin(username, password);
+      localStorage.setItem("afro_baobab_cms_session", result.token);
+      setSessionToken(result.token);
+      onRefresh();
+    } catch (err: any) {
+      setAuthError(err.message || "Failed to communicate with authentication server.");
     } finally {
       setAuthLoading(false);
     }
@@ -107,18 +161,37 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   // Save general header configuration
   const handleSaveHeader = async () => {
     try {
-      const res = await fetch("/api/cms/header", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          heroTitle,
-          heroSub,
-          footerDesc,
-          footerTagline,
-          tickerItems: tickerInput.split(",").map(x => x.trim()).filter(Boolean)
-        })
+      const res = await updateCmsHeader({
+        heroTitle,
+        heroSub,
+        footerDesc,
+        footerTagline,
+        tickerItems: tickerInput.split(",").map(x => x.trim()).filter(Boolean),
+
+        logoTextPrimary,
+        logoTextSecondary,
+        logoSub,
+        logoMode,
+        logoImageUrl,
+        logoEmblemColor,
+
+        heroWallpaperMode,
+        heroWallpaperUrl,
+        heroGradientStart,
+        heroGradientEnd,
+
+        aboutLabel,
+        aboutHeading,
+        aboutDesc1,
+        aboutDesc2,
+        aboutBtnText,
+        aboutFeaturedBadge,
+        aboutFeaturedTitle,
+        aboutFeaturedDesc,
+        aboutFeaturedImageMode,
+        aboutFeaturedImageUrl,
       });
-      if (res.ok) {
+      if (res.success) {
         alert("Homepage configuration saved successfully!");
         onRefresh();
       }
@@ -130,22 +203,19 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   // Add/Update Experience
   const handleSaveExperience = async (e: FormEvent) => {
     e.preventDefault();
-    const url = editingItemId 
-      ? `/api/cms/experiences/${editingItemId}` 
-      : "/api/cms/experiences";
-    const method = editingItemId ? "PUT" : "POST";
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: expTitle, description: expDesc, number: expNum })
+      const res = await saveCmsExperience(editingItemId, {
+        title: expTitle,
+        description: expDesc,
+        number: expNum,
+        imageUrl: expImageUrl
       });
 
-      if (res.ok) {
+      if (res.success) {
         setExpTitle("");
         setExpDesc("");
         setExpNum("");
+        setExpImageUrl("");
         setEditingItemId(null);
         onRefresh();
       }
@@ -157,8 +227,8 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const handleDeleteExperience = async (id: string) => {
     if (!confirm("Are you sure you want to delete this experience zone?")) return;
     try {
-      const res = await fetch(`/api/cms/experiences/${id}`, { method: "DELETE" });
-      if (res.ok) onRefresh();
+      const res = await deleteCmsExperience(id);
+      if (res.success) onRefresh();
     } catch (err) {
       alert("Failed to delete.");
     }
@@ -167,24 +237,23 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   // Add/Update Exhibition
   const handleSaveExhibition = async (e: FormEvent) => {
     e.preventDefault();
-    const url = editingItemId 
-      ? `/api/cms/exhibitions/${editingItemId}` 
-      : "/api/cms/exhibitions";
-    const method = editingItemId ? "PUT" : "POST";
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ badge: exhBadge, title: exhTitle, type: exhType, status: exhStatus, isNow: exhIsNow })
+      const res = await saveCmsExhibition(editingItemId, {
+        badge: exhBadge,
+        title: exhTitle,
+        type: exhType,
+        status: exhStatus,
+        isNow: exhIsNow,
+        imageUrl: exhImageUrl
       });
 
-      if (res.ok) {
+      if (res.success) {
         setExhBadge("");
         setExhTitle("");
         setExhType("");
         setExhStatus("");
         setExhIsNow(false);
+        setExhImageUrl("");
         setEditingItemId(null);
         onRefresh();
       }
@@ -196,8 +265,8 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const handleDeleteExhibition = async (id: string) => {
     if (!confirm("Delete this exhibition entry?")) return;
     try {
-      const res = await fetch(`/api/cms/exhibitions/${id}`, { method: "DELETE" });
-      if (res.ok) onRefresh();
+      const res = await deleteCmsExhibition(id);
+      if (res.success) onRefresh();
     } catch (err) {
       alert("Failed to delete.");
     }
@@ -206,27 +275,19 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   // Add/Update Event Item
   const handleSaveEvent = async (e: FormEvent) => {
     e.preventDefault();
-    const url = editingItemId 
-      ? `/api/cms/events/${editingItemId}` 
-      : "/api/cms/events";
-    const method = editingItemId ? "PUT" : "POST";
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          day: evDay, 
-          month: evMonth, 
-          title: evTitle, 
-          category: evCat, 
-          time: evTime, 
-          audience: evAudience, 
-          theme: evTheme 
-        })
+      const res = await saveCmsEvent(editingItemId, { 
+        day: evDay, 
+        month: evMonth, 
+        title: evTitle, 
+        category: evCat, 
+        time: evTime, 
+        audience: evAudience, 
+        theme: evTheme,
+        imageUrl: evImageUrl
       });
 
-      if (res.ok) {
+      if (res.success) {
         setEvDay("");
         setEvMonth("");
         setEvTitle("");
@@ -234,6 +295,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         setEvTime("");
         setEvAudience("");
         setEvTheme("clay");
+        setEvImageUrl("");
         setEditingItemId(null);
         onRefresh();
       }
@@ -245,8 +307,8 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const handleDeleteEvent = async (id: string) => {
     if (!confirm("Delete this event panel?")) return;
     try {
-      const res = await fetch(`/api/cms/events/${id}`, { method: "DELETE" });
-      if (res.ok) onRefresh();
+      const res = await deleteCmsEvent(id);
+      if (res.success) onRefresh();
     } catch (err) {
       alert("Failed to delete.");
     }
@@ -255,12 +317,8 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   // Inquiries / Bookings Status changes
   const handleUpdateBookingStatus = async (id: string, status: 'read' | 'completed' | 'unread') => {
     try {
-      const res = await fetch(`/api/cms/bookings/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status })
-      });
-      if (res.ok) onRefresh();
+      const res = await updateCmsBookingStatus(id, status);
+      if (res.success) onRefresh();
     } catch (err) {
       alert("Failed to update status.");
     }
@@ -269,8 +327,8 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const handleDeleteBooking = async (id: string) => {
     if (!confirm("Delete this booking request forever?")) return;
     try {
-      const res = await fetch(`/api/cms/bookings/${id}`, { method: "DELETE" });
-      if (res.ok) onRefresh();
+      const res = await deleteCmsBooking(id);
+      if (res.success) onRefresh();
     } catch (err) {
       alert("Failed to delete booking.");
     }
@@ -452,83 +510,320 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
             <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-warm-white">
               {/* general */}
               {activeTab === "general" && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-serif text-2xl text-charcoal">Configure Homepage Texts</h3>
+                <div className="space-y-8 pb-10">
+                  <div className="border-b border-sand/20 pb-4">
+                    <h3 className="font-serif text-2xl text-charcoal">Design & Brand Customizer Desk</h3>
                     <p className="text-xs text-[#777] mt-1 font-sans">
-                      Changes here update the live header layout, subtitles, rotating tickers and footer branding immediately.
+                      Changes here update the branding, background wallpaper, interactive design palettes, and general page segments immediately.
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-5">
-                    <div>
-                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
-                        Hero Main Title (HTML Supported)
-                      </label>
-                      <input
-                        type="text"
-                        value={heroTitle}
-                        onChange={(e) => setHeroTitle(e.target.value)}
-                        className="w-full bg-white border border-sand/50 px-4 py-2.5 text-xs text-charcoal rounded-[2px]"
-                      />
+                  {/* LOGO & BRAND SECTION */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">1. Logo & Emblem Settings</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Logo Mode</label>
+                        <select
+                          value={logoMode}
+                          onChange={(e) => setLogoMode(e.target.value as any)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        >
+                          <option value="default-emblem">Default Baobab Emblem & Text</option>
+                          <option value="custom-text">Pure Custom Typography (No Emblem)</option>
+                          <option value="image-url">Custom Logo Image (Asset URL)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Emblem Vector Color</label>
+                        <input
+                          type="text"
+                          value={logoEmblemColor}
+                          onChange={(e) => setLogoEmblemColor(e.target.value)}
+                          placeholder="E.g. #CB6A4A"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
-                        Hero Subtitle Description
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={heroSub}
-                        onChange={(e) => setHeroSub(e.target.value)}
-                        className="w-full bg-white border border-sand/50 px-4 py-2.5 text-xs text-charcoal rounded-[2px] resize-none"
-                      />
+                    {logoMode === "image-url" && (
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Custom Logo Image URL</label>
+                        <input
+                          type="text"
+                          value={logoImageUrl}
+                          onChange={(e) => setLogoImageUrl(e.target.value)}
+                          placeholder="E.g. /images/my-logo.png"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Primary Typography (E.g. AFRO)</label>
+                        <input
+                          type="text"
+                          value={logoTextPrimary}
+                          onChange={(e) => setLogoTextPrimary(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Secondary Typography (E.g. BAOBAB)</label>
+                        <input
+                          type="text"
+                          value={logoTextSecondary}
+                          onChange={(e) => setLogoTextSecondary(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Logo Subtitle row</label>
+                        <input
+                          type="text"
+                          value={logoSub}
+                          onChange={(e) => setLogoSub(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WALLPAPER & GRADIENT SECTION */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">2. Homepage Wallpaper & Shape Backdrop</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Hero Wallpaper Mode</label>
+                        <select
+                          value={heroWallpaperMode}
+                          onChange={(e) => setHeroWallpaperMode(e.target.value as any)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        >
+                          <option value="sunrise-tribal">Creative African Sunrise & Baobab Shape (Default)</option>
+                          <option value="geometric-mesh">Geometric Tribal Mesh Grid Overlay</option>
+                          <option value="minimalist-gradient">Pure Ambient Warm Dark Gradient</option>
+                          <option value="custom-image">Custom Wallpaper Photo Background</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Custom Wallpaper Image URL</label>
+                        <input
+                          type="text"
+                          disabled={heroWallpaperMode !== "custom-image"}
+                          value={heroWallpaperUrl}
+                          onChange={(e) => setHeroWallpaperUrl(e.target.value)}
+                          placeholder="Requires photo wallpaper background mode"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px] disabled:opacity-50"
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
-                          Footer Description
-                        </label>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Hero Background Gradient Start</label>
                         <input
                           type="text"
-                          value={footerDesc}
-                          onChange={(e) => setFooterDesc(e.target.value)}
-                          className="w-full bg-white border border-sand/50 px-4 py-2.5 text-xs text-charcoal rounded-[2px]"
+                          value={heroGradientStart}
+                          onChange={(e) => setHeroGradientStart(e.target.value)}
+                          placeholder="E.g. #160e07"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
-                          Footer Tagline slogan
-                        </label>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Hero Background Gradient End</label>
                         <input
                           type="text"
-                          value={footerTagline}
-                          onChange={(e) => setFooterTagline(e.target.value)}
-                          className="w-full bg-white border border-sand/50 px-4 py-2.5 text-xs text-charcoal rounded-[2px]"
+                          value={heroGradientEnd}
+                          onChange={(e) => setHeroGradientEnd(e.target.value)}
+                          placeholder="E.g. #141d30"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* HERO HEADER TEXTS */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">3. Hero Banner & Rotating Tick List</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Hero Main Title (HTML supported)</label>
+                        <input
+                          type="text"
+                          value={heroTitle}
+                          onChange={(e) => setHeroTitle(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Hero Secondary Tagline Slogan</label>
+                        <textarea
+                          rows={2}
+                          value={heroSub}
+                          onChange={(e) => setHeroSub(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px] resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Hero Rotating Tickers (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={tickerInput}
+                          onChange={(e) => setTickerInput(e.target.value)}
+                          placeholder="E.g. Exhibitions, Ceramics, Storytelling"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ABOUT / OUR STORY SECTION */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">4. Our Story Segment Customization</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Story Section Category Label</label>
+                        <input
+                          type="text"
+                          value={aboutLabel}
+                          onChange={(e) => setAboutLabel(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Story Action Button Headline</label>
+                        <input
+                          type="text"
+                          value={aboutBtnText}
+                          onChange={(e) => setAboutBtnText(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
-                        Rotating Ticker Items (comma-separated list)
-                      </label>
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Story Big Heading (HTML Supported)</label>
                       <input
                         type="text"
-                        value={tickerInput}
-                        onChange={(e) => setTickerInput(e.target.value)}
-                        className="w-full bg-white border border-sand/50 px-4 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        value={aboutHeading}
+                        onChange={(e) => setAboutHeading(e.target.value)}
+                        className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Paragraph Description 1</label>
+                        <textarea
+                          rows={4}
+                          value={aboutDesc1}
+                          onChange={(e) => setAboutDesc1(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 p-3 text-xs text-charcoal rounded-[2px] resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Paragraph Description 2</label>
+                        <textarea
+                          rows={4}
+                          value={aboutDesc2}
+                          onChange={(e) => setAboutDesc2(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 p-3 text-xs text-charcoal rounded-[2px] resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="border-t border-sand/10 pt-3 mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Featured Badge Indicator</label>
+                        <input
+                          type="text"
+                          value={aboutFeaturedBadge}
+                          onChange={(e) => setAboutFeaturedBadge(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium font-bold text-clay">Featured Card Graphic Style</label>
+                        <select
+                          value={aboutFeaturedImageMode}
+                          onChange={(e) => setAboutFeaturedImageMode(e.target.value as any)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        >
+                          <option value="pattern">Authentic Baobab SVG Pattern Outline</option>
+                          <option value="custom-image">Custom Uploaded Image preview URL</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Featured Block Main Heading</label>
+                        <input
+                          type="text"
+                          value={aboutFeaturedTitle}
+                          onChange={(e) => setAboutFeaturedTitle(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Featured Graphic Portrait image URL</label>
+                        <input
+                          type="text"
+                          disabled={aboutFeaturedImageMode !== "custom-image"}
+                          value={aboutFeaturedImageUrl}
+                          onChange={(e) => setAboutFeaturedImageUrl(e.target.value)}
+                          placeholder="Requires Custom Uploaded Image mode"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px] disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Featured Block Outline description</label>
+                      <textarea
+                        rows={2}
+                        value={aboutFeaturedDesc}
+                        onChange={(e) => setAboutFeaturedDesc(e.target.value)}
+                        className="w-full bg-ivory/35 border border-sand/50 p-3 text-xs text-charcoal rounded-[2px] resize-none"
                       />
                     </div>
                   </div>
 
-                  <button
-                    onClick={handleSaveHeader}
-                    className="bg-clay hover:bg-terracotta text-white font-mono uppercase tracking-widest text-xs px-6 py-3 rounded-[2px] transition-colors cursor-pointer"
-                  >
-                    Save Changes
-                  </button>
+                  {/* FOOTER VALUES */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">5. Footer Identity & slogan lines</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Footer Brief Branding paragraph</label>
+                        <input
+                          type="text"
+                          value={footerDesc}
+                          onChange={(e) => setFooterDesc(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Footer Artistic slogan proverb</label>
+                        <input
+                          type="text"
+                          value={footerTagline}
+                          onChange={(e) => setFooterTagline(e.target.value)}
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      onClick={handleSaveHeader}
+                      className="bg-clay hover:bg-terracotta text-white font-mono uppercase tracking-widest text-xs px-10 py-4 rounded-[2px] transition-colors cursor-pointer shadow-lg font-bold hover:translate-y-[-1px]"
+                    >
+                      Save Configuration Settings
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -584,6 +879,19 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                        Experience Card Image URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={expImageUrl}
+                        onChange={(e) => setExpImageUrl(e.target.value)}
+                        placeholder="E.g. https://images.unsplash.com/photo-... or relative image URL"
+                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                      />
+                    </div>
+
                     <div className="flex gap-2">
                       <button
                         type="submit"
@@ -599,6 +907,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                             setExpTitle("");
                             setExpDesc("");
                             setExpNum("");
+                            setExpImageUrl("");
                           }}
                           className="bg-[#eee] hover:bg-[#ddd] text-[#333] font-mono uppercase text-xs tracking-widest px-4 py-2 rounded-[2px]"
                         >
@@ -624,6 +933,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                                     setExpTitle(exp.title);
                                     setExpDesc(exp.description);
                                     setExpNum(exp.number);
+                                    setExpImageUrl(exp.imageUrl || "");
                                   }}
                                   className="text-charcoal/40 hover:text-clay transition-colors cursor-pointer"
                                 >
@@ -727,6 +1037,19 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       </label>
                     </div>
 
+                    <div>
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                        Exhibition Preview Image URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={exhImageUrl}
+                        onChange={(e) => setExhImageUrl(e.target.value)}
+                        placeholder="E.g. https://images.unsplash.com/photo-... or relative image URL"
+                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                      />
+                    </div>
+
                     <div className="flex gap-2">
                       <button
                         type="submit"
@@ -744,6 +1067,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                             setExhType("");
                             setExhStatus("");
                             setExhIsNow(false);
+                            setExhImageUrl("");
                           }}
                           className="bg-[#eee] hover:bg-[#ddd] text-[#333] font-mono uppercase text-xs tracking-widest px-4 py-2 rounded-[2px]"
                         >
@@ -782,6 +1106,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                                 setExhType(exh.type);
                                 setExhStatus(exh.status);
                                 setExhIsNow(exh.isNow);
+                                setExhImageUrl(exh.imageUrl || "");
                               }}
                               className="text-charcoal/40 hover:text-clay transition-colors cursor-pointer"
                             >
@@ -911,6 +1236,19 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       </div>
                     </div>
 
+                    <div>
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                        Event Core Image Cover URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={evImageUrl}
+                        onChange={(e) => setEvImageUrl(e.target.value)}
+                        placeholder="E.g. https://images.unsplash.com/... (Overrides gradient card background)"
+                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                      />
+                    </div>
+
                     <div className="flex gap-2 font-mono">
                       <button
                         type="submit"
@@ -930,6 +1268,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                             setEvTime("");
                             setEvAudience("");
                             setEvTheme("clay");
+                            setEvImageUrl("");
                           }}
                           className="bg-[#eee] hover:bg-[#ddd] text-[#333] uppercase text-xs tracking-widest px-4 py-2 rounded-[2px]"
                         >
@@ -968,6 +1307,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                                   setEvTime(ev.time);
                                   setEvAudience(ev.audience);
                                   setEvTheme(ev.theme);
+                                  setEvImageUrl(ev.imageUrl || "");
                                 }}
                                 className="text-white bg-black/40 hover:bg-black/60 p-1.5 rounded-full transition-colors cursor-pointer"
                               >

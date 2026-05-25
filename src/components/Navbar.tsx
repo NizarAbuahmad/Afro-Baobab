@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Lock, Sparkles, BookOpen } from "lucide-react";
 import AfroBaobabLogo from "./AfroBaobabLogo";
+import { CmsHeader } from "../types";
 
 interface NavbarProps {
   onOpenCms: () => void;
   onOpenBooking: (type: 'school' | 'corporate' | 'general') => void;
   isAdmin: boolean;
   onLogout: () => void;
+  header?: CmsHeader;
 }
 
-export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout }: NavbarProps) {
+export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, header }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -29,7 +31,17 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout }: 
       }`}
     >
       <a href="#" className="flex items-center gap-2 group">
-        <AfroBaobabLogo variant="navbar" color="#CB6A4A" className="text-white group-hover:scale-[1.03] transition-transform duration-300" />
+        <AfroBaobabLogo
+          variant="navbar"
+          color="#CB6A4A"
+          className="text-white group-hover:scale-[1.03] transition-transform duration-300"
+          logoTextPrimary={header?.logoTextPrimary}
+          logoTextSecondary={header?.logoTextSecondary}
+          logoSub={header?.logoSub}
+          logoMode={header?.logoMode}
+          logoImageUrl={header?.logoImageUrl}
+          logoEmblemColor={header?.logoEmblemColor}
+        />
       </a>
 
       <ul className="flex items-center gap-6 md:gap-8 list-none font-sans">

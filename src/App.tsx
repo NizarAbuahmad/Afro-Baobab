@@ -7,6 +7,7 @@ import CmsDashboard from "./components/CmsDashboard";
 import ContactForm from "./components/ContactForm";
 import HeritageMotifs from "./components/HeritageMotifs";
 import AfroBaobabLogo from "./components/AfroBaobabLogo";
+import { getCmsAll } from "./lib/cmsClient";
 
 // Reusable elegant tribal geometric separator to enrich spacing and design focus
 const TribalDivider = ({ light = false }: { light?: boolean }) => (
@@ -44,13 +45,10 @@ export default function App() {
 
   const fetchCmsData = async () => {
     try {
-      const res = await fetch("/api/cms/all");
-      if (res.ok) {
-        const result: CmsData = await res.json();
-        setData(result);
-        if (result.exhibitions.length > 0 && !selectedExhibitionId) {
-          setSelectedExhibitionId(result.exhibitions[0].id);
-        }
+      const result = await getCmsAll();
+      setData(result);
+      if (result.exhibitions.length > 0 && !selectedExhibitionId) {
+        setSelectedExhibitionId(result.exhibitions[0].id);
       }
     } catch (err) {
       console.error("Failed to load CMS data", err);
@@ -89,6 +87,7 @@ export default function App() {
         onOpenBooking={triggerBooking}
         isAdmin={isAdmin}
         onLogout={handleLogout}
+        header={data?.header}
       />
 
       {loading ? (
@@ -104,70 +103,108 @@ export default function App() {
         <>
           {/* HERO */}
           <section className="relative min-h-screen flex flex-col justify-end overflow-hidden pb-20 pt-28">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#160e07] via-[#2a1610] to-[#141d30]"></div>
+            {/* Background Layer with absolute transitions */}
+            {data?.header.heroWallpaperMode === "custom-image" && data?.header.heroWallpaperUrl ? (
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-all duration-700"
+                style={{
+                  backgroundImage: `linear-gradient(rgba(10, 6, 4, 0.75), rgba(15, 10, 8, 0.85)), url(${data.header.heroWallpaperUrl})`
+                }}
+              />
+            ) : (
+              <div
+                className="absolute inset-0 bg-gradient-to-br transition-all duration-700"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${data?.header.heroGradientStart || "#160e07"}, ${data?.header.heroGradientEnd || "#141d30"})`
+                }}
+              />
+            )}
             
             {/* Ambient Noise / Orbs */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#FAF8F4_1.5px,transparent_1.5px)] [background-size:24px_24px]"></div>
             <div className="absolute w-[600px] h-[600px] rounded-full bg-gradient-to-r from-terracotta/35 to-transparent top-[-100px] right-[-100px] blur-3xl animate-orb1"></div>
             <div className="absolute w-[450px] h-[450px] rounded-full bg-gradient-to-r from-[#CB6A4A]/25 to-transparent bottom-[60px] left-[-100px] blur-3xl animate-orb2"></div>
 
-            {/* Artistic African Sunrise SVG Background */}
-            <div className="absolute right-0 bottom-0 top-0 w-full lg:w-3/5 opacity-40 pointer-events-none flex justify-end items-end overflow-hidden z-2 select-none">
-              <svg className="w-[85%] h-auto text-[#CB6A4A]/40 select-none min-w-[500px]" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Sun with custom tribal geometry */}
-                <circle cx="350" cy="300" r="140" stroke="currentColor" strokeWidth="1" strokeDasharray="8 6" opacity="0.3" />
-                <circle cx="350" cy="300" r="110" stroke="currentColor" strokeWidth="1.5" opacity="0.6" />
-                <circle cx="350" cy="300" r="80" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" opacity="0.8" />
-                <circle cx="350" cy="300" r="50" fill="currentColor" opacity="0.1" />
-                
-                {/* Traditional geometric rays */}
-                <path d="M 350,110 L 350,140 M 350,460 L 350,490" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M 160,300 L 190,300 M 510,300 L 540,300" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M 215,165 L 235,185 M 485,435 L 505,455" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M 215,435 L 235,415 M 485,165 L 505,185" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                
-                {/* Tribal chevron sun detail */}
-                <path d="M 310,300 L 330,285 L 350,300 L 370,285 L 390,300" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
-                <path d="M 310,315 L 330,300 L 350,315 L 370,300 L 390,315" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
-                
-                {/* Giant Baobab Tree Lineart Silhouette */}
-                <path
-                  d="M 280,500 
-                     C 280,440 250,430 250,380 
-                     C 250,320 280,310 300,280 
-                     C 270,270 230,290 200,310 
-                     C 180,330 160,330 140,310 
-                     C 165,290 200,290 220,300
-                     C 250,310 270,295 285,270
-                     C 260,250 220,260 200,240
-                     C 175,220 150,180 170,150
-                     C 190,175 210,200 240,210
-                     C 270,220 285,200 295,170
-                     C 305,130 295,90 325,60
-                     C 345,90 335,130 350,165
-                     C 360,195 380,210 410,200
-                     C 440,190 460,160 490,140
-                     C 500,170 480,210 450,230
-                     C 420,250 405,260 415,290
-                     C 445,280 485,280 515,300
-                     C 530,310 540,340 515,360
-                     C 490,350 460,330 430,330
-                     C 405,360 415,400 410,440
-                     C 410,480 390,500 390,500 
-                     Z"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="#160e07"
-                  fillOpacity="0.4"
-                />
+            {/* Geometric Mesh Overlay */}
+            {data?.header.heroWallpaperMode === "geometric-mesh" && (
+              <div className="absolute inset-0 opacity-20 pointer-events-none select-none">
+                <svg className="w-full h-full" style={{ color: data?.header.logoEmblemColor || "#CB6A4A" }} viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <defs>
+                    <pattern id="meshGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+                      <path d="M 8,0 L 16,8 L 8,16 L 0,8 Z" fill="none" stroke="currentColor" strokeWidth="0.2" />
+                      <circle cx="8" cy="8" r="1.2" fill="currentColor" opacity="0.25" />
+                    </pattern>
+                  </defs>
+                  <rect width="100" height="100" fill="url(#meshGrid)" />
+                </svg>
+              </div>
+            )}
 
-                {/* Ground horizon lines */}
-                <path d="M 50,500 H 450" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M 20,490 H 480" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="15 8" opacity="0.5" />
-              </svg>
-            </div>
+            {/* Artistic African Sunrise SVG Background */}
+            {(!data?.header.heroWallpaperMode || data?.header.heroWallpaperMode === "sunrise-tribal") && (
+              <div className="absolute right-0 bottom-0 top-0 w-full lg:w-3/5 opacity-40 pointer-events-none flex justify-end items-end overflow-hidden z-2 select-none">
+                <svg
+                  className="w-[85%] h-auto select-none min-w-[500px]"
+                  style={{ color: data?.header.logoEmblemColor || "#CB6A4A" }}
+                  viewBox="0 0 500 500"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Sun with custom tribal geometry */}
+                  <circle cx="350" cy="300" r="140" stroke="currentColor" strokeWidth="1" strokeDasharray="8 6" opacity="0.3" />
+                  <circle cx="350" cy="300" r="110" stroke="currentColor" strokeWidth="1.5" opacity="0.6" />
+                  <circle cx="350" cy="300" r="80" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" opacity="0.8" />
+                  <circle cx="350" cy="300" r="50" fill="currentColor" opacity="0.1" />
+                  
+                  {/* Traditional geometric rays */}
+                  <path d="M 350,110 L 350,140 M 350,460 L 350,490" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M 160,300 L 190,300 M 510,300 L 540,300" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M 215,165 L 235,185 M 485,435 L 505,455" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M 215,435 L 235,415 M 485,165 L 505,185" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  
+                  {/* Tribal chevron sun detail */}
+                  <path d="M 310,300 L 330,285 L 350,300 L 370,285 L 390,300" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+                  <path d="M 310,315 L 330,300 L 350,315 L 370,300 L 390,315" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+                  
+                  {/* Giant Baobab Tree Lineart Silhouette */}
+                  <path
+                    d="M 280,500 
+                       C 280,440 250,430 250,380 
+                       C 250,320 280,310 300,280 
+                       C 270,270 230,290 200,310 
+                       C 180,330 160,330 140,310 
+                       C 165,290 200,290 220,300
+                       C 250,310 270,295 285,270
+                       C 260,250 220,260 200,240
+                       C 175,220 150,180 170,150
+                       C 190,175 210,200 240,210
+                       C 270,220 285,200 295,170
+                       C 305,130 295,90 325,60
+                       C 345,90 335,130 350,165
+                       C 360,195 380,210 410,200
+                       C 440,190 460,160 490,140
+                       C 500,170 480,210 450,230
+                       C 420,250 405,260 415,290
+                       C 445,280 485,280 515,300
+                       C 530,310 540,340 515,360
+                       C 490,350 460,330 430,330
+                       C 405,360 415,400 410,440
+                       C 410,480 390,500 390,500 
+                       Z"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="#160e07"
+                    fillOpacity="0.4"
+                  />
+
+                  {/* Ground horizon lines */}
+                  <path d="M 50,500 H 450" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M 20,490 H 480" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="15 8" opacity="0.5" />
+                </svg>
+              </div>
+            )}
 
             {/* Vertical text helper */}
             <div className="absolute bottom-24 right-10 text-[0.65rem] tracking-[0.35em] text-white/20 uppercase whitespace-nowrap rotate-90 origin-right-bottom hidden md:block select-none font-mono">
@@ -253,22 +290,23 @@ export default function App() {
           <section className="py-24 px-[5vw] max-w-7xl mx-auto relative bg-pattern-mudcloth/40 rounded-[6px] border border-sand/15 bg-white/40 my-16 shadow-xs" id="about">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
               <div className="space-y-6">
-                <div className="label">Our Story</div>
-                <h2 className="font-serif text-4xl sm:text-5xl font-light leading-[1.15] text-charcoal">
-                  A Place Where Culture <br />Is Not Only Seen, <br />But <span className="text-clay italic">Experienced</span>
-                </h2>
+                <div className="label">{data?.header.aboutLabel || "Our Story"}</div>
+                <h2
+                  className="font-serif text-4xl sm:text-5xl font-light leading-[1.15] text-charcoal"
+                  dangerouslySetInnerHTML={{ __html: data?.header.aboutHeading || "A Place Where Culture <br />Is Not Only Seen, <br />But <span className=\"text-clay italic\">Experienced</span>" }}
+                />
                 <p className="text-charcoal/70 text-sm leading-relaxed font-sans max-w-lg">
-                  Afro Baobab Cultural Hub is more than a venue. It is an immersive cultural learning destination where exhibitions, storytelling, rhythm, movement, creativity, and food become portals into human connection and discovery.
+                  {data?.header.aboutDesc1 || "Afro Baobab Cultural Hub is more than a venue. It is an immersive cultural learning destination where exhibitions, storytelling, rhythm, movement, creativity, and food become portals into human connection and discovery."}
                 </p>
                 <p className="text-charcoal/70 text-sm leading-relaxed font-sans max-w-lg">
-                  Rooted in African heritage and open to the world, the hub is designed for curious minds — children, families, professionals, artists, and communities who believe culture has the power to transform.
+                  {data?.header.aboutDesc2 || "Rooted in African heritage and open to the world, the hub is designed for curious minds — children, families, professionals, artists, and communities who believe culture has the power to transform."}
                 </p>
                 <div className="pt-4">
                   <a
                     href="#experiences"
                     className="bg-clay hover:bg-terracotta text-white px-7 py-3 rounded-[2px] text-xs font-mono uppercase tracking-widest transition-all inline-block shadow-sm"
                   >
-                    Explore Experience Zones
+                    {data?.header.aboutBtnText || "Explore Experience Zones"}
                   </a>
                 </div>
               </div>
@@ -276,20 +314,33 @@ export default function App() {
               {/* Graphical illustration zone */}
               <div className="relative p-6 sm:p-10 lg:p-12">
                 <div className="absolute inset-0 bg-[#A64836]/10 rounded-tr-[100px] rounded-bl-[100px] border border-sand/30 transform rotate-1 select-none"></div>
-                <div className="relative aspect-[4/3] bg-gradient-to-br from-[#3a1f12] via-terracotta to-[#1c1208] rounded-[4px] overflow-hidden flex flex-col justify-end p-6 shadow-2xl group border border-sand/20 clay-inset-border">
+                
+                <div
+                  className="relative aspect-[4/3] rounded-[4px] overflow-hidden flex flex-col justify-end p-6 shadow-2xl group border border-sand/20 clay-inset-border bg-cover bg-center"
+                  style={{
+                    backgroundImage: data?.header.aboutFeaturedImageMode === "custom-image" && data?.header.aboutFeaturedImageUrl
+                      ? `linear-gradient(rgba(10, 6, 4, 0.45), rgba(15, 10, 8, 0.9)), url(${data.header.aboutFeaturedImageUrl})`
+                      : "linear-gradient(135deg, #3a1f12, #CB6A4A, #1c1208)"
+                  }}
+                >
                   {/* Decorative mesh */}
-                  <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,#E7D6BA_1px,transparent_1px),linear-gradient(-45deg,#E7D6BA_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+                  {data?.header.aboutFeaturedImageMode !== "custom-image" && (
+                    <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,#E7D6BA_1px,transparent_1px),linear-gradient(-45deg,#E7D6BA_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+                  )}
                   
-                  <div className="relative space-y-2">
-                    <span className="text-sand/50 text-[10px] tracking-widest uppercase font-mono block">Featured Immersive Zone</span>
-                    <h4 className="font-serif text-white text-3xl font-light leading-snug">
-                      The Living Baobab <span className="text-clay italic">Story Room</span>
-                    </h4>
-                    <p className="text-white/60 text-xs font-light leading-relaxed max-w-md">
-                      Sit under the giant woven Baobab canopy where surround-sound rhythm, projection-mapping story sheets, and live actors combine to share heritage tales.
+                  <div className="relative space-y-2 z-10">
+                    <span className="text-sand/70 text-[10px] tracking-widest uppercase font-mono block">
+                      {data?.header.aboutFeaturedBadge || "Featured Immersive Zone"}
+                    </span>
+                    <h4
+                      className="font-serif text-white text-3xl font-light leading-snug"
+                      dangerouslySetInnerHTML={{ __html: data?.header.aboutFeaturedTitle || "The Living Baobab <span className=\"text-clay italic\">Story Room</span>" }}
+                    />
+                    <p className="text-white/70 text-xs font-light leading-relaxed max-w-md">
+                      {data?.header.aboutFeaturedDesc || "Sit under the giant woven Baobab canopy where surround-sound rhythm, projection-mapping story sheets, and live actors combine to share heritage tales."}
                     </p>
                   </div>
-                  <span className="absolute bottom-6 right-6 text-white/30 text-[9px] tracking-widest uppercase font-mono select-none">DUBAI · UAE</span>
+                  <span className="absolute bottom-6 right-6 text-white/40 text-[9px] tracking-widest uppercase font-mono select-none z-10">DUBAI · UAE</span>
                 </div>
 
                 <div className="absolute -bottom-6 -left-2 bg-charcoal text-white rounded-[3px] p-5 shadow-xl border border-sand/10 space-y-1 hidden sm:block">
@@ -330,7 +381,13 @@ export default function App() {
                 {data?.experiences.map((exp) => (
                   <div
                     key={exp.id}
-                    className="bg-[#19120c] p-8 min-h-[290px] flex flex-col justify-end relative overflow-hidden group hover:bg-[#251c17] transition-all duration-300 border border-sand/5"
+                    className="p-8 min-h-[290px] flex flex-col justify-end relative overflow-hidden group hover:opacity-95 transition-all duration-300 border border-sand/5 bg-cover bg-center"
+                    style={{
+                      backgroundImage: exp.imageUrl
+                        ? `linear-gradient(rgba(25, 18, 12, 0.45), rgba(25, 18, 12, 0.9)), url(${exp.imageUrl})`
+                        : "none",
+                      backgroundColor: "#19120c"
+                    }}
                   >
                     {/* Geometric Diamond Accent */}
                     <span className="text-clay/20 text-[9px] font-mono tracking-widest absolute top-6 left-8 group-hover:text-clay transition-colors duration-300">
@@ -373,20 +430,32 @@ export default function App() {
 
                 {/* Left Active Exhibition details card preview */}
                 {activeExhibition && (
-                  <div className="mt-8 bg-white/60 backdrop-blur-sm border border-sand p-6 rounded-[2px] max-w-md space-y-3 shadow-md animate-fadeIn clay-inset-border">
-                    <span className="text-[10px] tracking-widest uppercase font-mono text-clay font-bold block">
-                      {activeExhibition.status === 'Now' ? "ACTIVE EXHIBITION" : `UPCOMING EXHIBITION: ${activeExhibition.status}`}
-                    </span>
-                    <h4 className="font-serif text-charcoal text-xl font-medium leading-snug">
-                      {activeExhibition.title}
-                    </h4>
-                    <p className="text-charcoal/60 text-xs font-mono font-medium">{activeExhibition.type}</p>
-                    <button
-                      onClick={() => triggerBooking('general')}
-                      className="text-clay hover:text-terracotta text-xs font-mono tracking-widest uppercase flex items-center gap-1.5 pt-2"
-                    >
-                      Plan Visit For This Exhibition <ArrowUpRight className="w-4 h-4" />
-                    </button>
+                  <div className="mt-8 bg-white/60 backdrop-blur-sm border border-sand rounded-[2px] max-w-md overflow-hidden shadow-md animate-fadeIn clay-inset-border">
+                    {activeExhibition.imageUrl && (
+                      <div className="h-44 w-full bg-charcoal/10 overflow-hidden relative">
+                        <img
+                          src={activeExhibition.imageUrl}
+                          alt={activeExhibition.title}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6 space-y-3">
+                      <span className="text-[10px] tracking-widest uppercase font-mono text-clay font-bold block">
+                        {activeExhibition.status === 'Now' ? "ACTIVE EXHIBITION" : `UPCOMING EXHIBITION: ${activeExhibition.status}`}
+                      </span>
+                      <h4 className="font-serif text-charcoal text-xl font-medium leading-snug">
+                        {activeExhibition.title}
+                      </h4>
+                      <p className="text-charcoal/60 text-xs font-mono font-medium">{activeExhibition.type}</p>
+                      <button
+                        onClick={() => triggerBooking('general')}
+                        className="text-clay hover:text-terracotta text-xs font-mono tracking-widest uppercase flex items-center gap-1.5 pt-2 cursor-pointer"
+                      >
+                        Plan Visit For This Exhibition <ArrowUpRight className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -536,16 +605,27 @@ export default function App() {
                     key={evItem.id}
                     className="bg-white border border-sand/20 rounded-[3px] overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
                   >
-                    <div className={`h-48 p-4 relative flex justify-end items-start ${
-                      evItem.theme === 'clay' ? 'bg-gradient-to-br from-clay to-terracotta' :
-                      evItem.theme === 'moss' ? 'bg-gradient-to-br from-moss to-[#202c1c]' :
-                      'bg-gradient-to-br from-indigo to-[#0d1622]'
-                    }`}>
+                    <div
+                      className="h-48 p-4 relative flex justify-end items-start bg-cover bg-center"
+                      style={{
+                        backgroundImage: evItem.imageUrl
+                          ? `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.45)), url(${evItem.imageUrl})`
+                          : "none",
+                        backgroundColor: evItem.theme === 'moss' ? '#202c1c' : evItem.theme === 'indigo' ? '#0d1622' : '#CB6A4A'
+                      }}
+                    >
+                      {!evItem.imageUrl && (
+                        <div className={`absolute inset-0 bg-gradient-to-br ${
+                          evItem.theme === 'clay' ? 'from-clay to-terracotta' :
+                          evItem.theme === 'moss' ? 'from-moss to-[#202c1c]' :
+                          'from-indigo to-[#0d1622]'
+                        }`} />
+                      )}
                       {/* Grid Decoration */}
                       <div className="absolute inset-0 opacity-5 bg-[linear-gradient(45deg,#FAF8F4_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none"></div>
                       
                       {/* Date Badge */}
-                      <div className="bg-black/35 backdrop-blur-sm text-white px-3 py-1.5 text-center rounded-[2px] min-w-[50px] shadow-md border border-white/5">
+                      <div className="bg-black/40 backdrop-blur-md text-white px-3 py-1.5 text-center rounded-[2px] min-w-[50px] shadow-md border border-white/10 relative z-10">
                         <span className="font-serif text-lg font-semibold block leading-tight">{evItem.day}</span>
                         <span className="text-[10px] tracking-wider uppercase opacity-85 block font-mono font-medium">{evItem.month}</span>
                       </div>
@@ -624,7 +704,17 @@ export default function App() {
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-14 border-b border-white/5">
               {/* Logo block left side */}
               <div className="lg:col-span-2 space-y-4">
-                <AfroBaobabLogo variant="full" color="#CB6A4A" textClassName="text-[#FAF8F4]" />
+                <AfroBaobabLogo
+                  variant="full"
+                  color="#CB6A4A"
+                  textClassName="text-[#FAF8F4]"
+                  logoTextPrimary={data?.header.logoTextPrimary}
+                  logoTextSecondary={data?.header.logoTextSecondary}
+                  logoSub={data?.header.logoSub}
+                  logoMode={data?.header.logoMode}
+                  logoImageUrl={data?.header.logoImageUrl}
+                  logoEmblemColor={data?.header.logoEmblemColor}
+                />
                 <p className="text-white/30 text-xs leading-relaxed max-w-sm font-sans pt-3">
                   {data?.header.footerDesc}
                 </p>

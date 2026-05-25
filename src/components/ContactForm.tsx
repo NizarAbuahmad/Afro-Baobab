@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { Mail, Phone, User, Calendar, MessageSquare, X, CheckCircle, ArrowUpRight } from "lucide-react";
+import { saveCmsBooking } from "../lib/cmsClient";
 
 interface ContactFormProps {
   isOpen: boolean;
@@ -25,13 +26,8 @@ export default function ContactForm({ isOpen, onClose, defaultType = 'general' }
     setError("");
 
     try {
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, type, notes })
-      });
-
-      if (res.ok) {
+      const res = await saveCmsBooking({ name, email, phone, type, notes });
+      if (res.success) {
         setSuccess(true);
         setName("");
         setEmail("");
