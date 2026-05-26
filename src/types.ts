@@ -13,11 +13,19 @@ export interface CmsHeader {
   logoImageUrl?: string;        // An uploaded/custom URL for the brand logo
   logoEmblemColor?: string;     // Color like '#CB6A4A' (clay)
 
+  footerLogoMode?: "default-emblem" | "custom-text" | "image-url" | "match-header";
+  footerLogoImageUrl?: string;
+
   // --- Hero Wallpaper / Shapes Customize ---
   heroWallpaperMode?: "sunrise-tribal" | "geometric-mesh" | "minimalist-gradient" | "custom-image";
   heroWallpaperUrl?: string;    // Custom image overlay
   heroGradientStart?: string;   // Dark background hex (e.g., "#160e07")
   heroGradientEnd?: string;     // Dark background hex (e.g., "#141d30")
+
+  // --- Hero Headline Properties ---
+  heroTextAlignment?: "left" | "center" | "right";
+  heroTitleSize?: number;
+  heroSubSize?: number;
 
   // --- Story Text Customization ---
   aboutLabel?: string;          // "Our Story"
@@ -30,6 +38,53 @@ export interface CmsHeader {
   aboutFeaturedDesc?: string;   // Description of the story room
   aboutFeaturedImageMode?: "pattern" | "custom-image"; // Style of background
   aboutFeaturedImageUrl?: string; // Custom image URL for the about block
+
+  // --- Core Theme Color Customization ---
+  themeColorClay?: string;
+  themeColorMoss?: string;
+  themeColorIndigo?: string;
+  themeColorCharcoal?: string;
+  themeColorIvory?: string;
+
+  // --- Core Theme Font Customization ---
+  themeFontFamilyHeadings?: string; // e.g. "Space Grotesk"
+  themeFontFamilyBody?: string;     // e.g. "Inter"
+  themeFontImportUrl?: string;      // Optional Google Font embed snippet or @import url
+
+  // --- Custom Hero Action Buttons ---
+  heroBtn1Text?: string;
+  heroBtn1Link?: string;
+  heroBtn2Text?: string;
+  heroBtn2Link?: string;
+
+  // --- Contact Information List ---
+  contactPhone?: string;
+  contactEmail?: string;
+  contactAddress?: string;
+  contactHours?: string;
+
+  // --- Social Media Connections ---
+  socialInstagram?: string;
+  socialFacebook?: string;
+  socialTwitter?: string;
+  socialTiktok?: string;
+  socialYoutube?: string;
+
+  // --- Inquiry Booking Notification Target Email ---
+  inquiryRecipientEmail?: string;
+
+  // --- Brand Logo Sizes ---
+  navbarLogoSize?: number; // scale multiplier, default 100 (%)
+  footerLogoSize?: number; // scale multiplier, default 100 (%)
+}
+
+export interface CustomPage {
+  id: string;
+  slug: string;
+  title: string;
+  content: string; // Dynamic markdown or plain/HTML text
+  shownInNavbar: boolean;
+  createdAt: string;
 }
 
 export interface Experience {
@@ -79,4 +134,5 @@ export interface CmsData {
   exhibitions: Exhibition[];
   events: EventItem[];
   bookings: Booking[];
+  customPages?: CustomPage[]; // Newly dynamic custom subpages list
 }

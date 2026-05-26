@@ -12,6 +12,7 @@ interface LogoProps {
   logoMode?: "default-emblem" | "custom-text" | "image-url";
   logoImageUrl?: string;
   logoEmblemColor?: string;
+  scalePercent?: number;
 }
 
 export default function AfroBaobabLogo({
@@ -25,7 +26,8 @@ export default function AfroBaobabLogo({
   logoSub = "CULTURAL HUB & ART GALLERY",
   logoMode = "default-emblem",
   logoImageUrl = "",
-  logoEmblemColor = "#CB6A4A"
+  logoEmblemColor = "#CB6A4A",
+  scalePercent
 }: LogoProps) {
   const activeColor = logoEmblemColor || color;
   const primaryText = logoTextPrimary || "AFRO";
@@ -236,7 +238,10 @@ export default function AfroBaobabLogo({
   if (variant === "navbar") {
     const showEmblem = mode !== "custom-text";
     return (
-      <div className={`flex items-center gap-3.5 ${className}`}>
+      <div 
+        className={`flex items-center gap-3.5 ${className}`}
+        style={scalePercent ? { transform: `scale(${scalePercent / 100})`, transformOrigin: "left center" } : undefined}
+      >
         {showEmblem && renderEmblem("h-11 sm:h-13 w-auto")}
         <div className="flex flex-col select-none text-white">
           <div className="flex items-center gap-1.5 font-sans uppercase font-bold text-sm sm:text-base tracking-[0.18em] leading-none">
@@ -251,7 +256,10 @@ export default function AfroBaobabLogo({
   }
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
+    <div 
+      className={`flex items-center gap-4 ${className}`}
+      style={scalePercent ? { transform: `scale(${scalePercent / 100})`, transformOrigin: "left center" } : undefined}
+    >
       {mode !== "custom-text" && renderEmblem("h-16 md:h-20 w-auto")}
       {renderTypography()}
     </div>

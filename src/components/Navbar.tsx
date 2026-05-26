@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Lock, Sparkles, BookOpen } from "lucide-react";
 import AfroBaobabLogo from "./AfroBaobabLogo";
-import { CmsHeader } from "../types";
+import { CmsHeader, CustomPage } from "../types";
 
 interface NavbarProps {
   onOpenCms: () => void;
@@ -9,9 +9,11 @@ interface NavbarProps {
   isAdmin: boolean;
   onLogout: () => void;
   header?: CmsHeader;
+  customPages?: CustomPage[];
+  onSelectPage?: (page: CustomPage) => void;
 }
 
-export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, header }: NavbarProps) {
+export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, header, customPages, onSelectPage }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, he
           logoMode={header?.logoMode}
           logoImageUrl={header?.logoImageUrl}
           logoEmblemColor={header?.logoEmblemColor}
+          scalePercent={header?.navbarLogoSize}
         />
       </a>
 
@@ -77,6 +80,18 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, he
             Events
           </a>
         </li>
+
+        {/* Dynamic CMS Pages in Navbar */}
+        {customPages?.filter(p => p.shownInNavbar).map((p) => (
+          <li key={p.id} className="hidden md:block">
+            <button
+              onClick={() => onSelectPage?.(p)}
+              className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-medium transition-colors duration-200 cursor-pointer bg-transparent border-0 py-0 px-1 hover:translate-y-[-1px]"
+            >
+              {p.title}
+            </button>
+          </li>
+        ))}
         <li>
           <button
             onClick={() => onOpenBooking('general')}

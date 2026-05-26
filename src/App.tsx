@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Calendar, BookOpen, Clock, Heart, Users, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, Calendar, BookOpen, Clock, Heart, Users, ArrowUpRight, CheckCircle2, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { CmsData, Exhibition } from "./types";
+import { CmsData, Exhibition, CustomPage } from "./types";
 import Navbar from "./components/Navbar";
 import CmsDashboard from "./components/CmsDashboard";
 import ContactForm from "./components/ContactForm";
@@ -34,6 +34,7 @@ export default function App() {
   const [isCmsOpen, setIsCmsOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingType, setBookingType] = useState<'school' | 'corporate' | 'general'>('general');
+  const [selectedCustomPage, setSelectedCustomPage] = useState<CustomPage | null>(null);
 
   // Interactive exhibition tab selector
   const [selectedExhibitionId, setSelectedExhibitionId] = useState<string | null>(null);
@@ -81,6 +82,89 @@ export default function App() {
 
   return (
     <div className="bg-ivory text-charcoal min-h-screen font-sans selection:bg-clay selection:text-white">
+      {data?.header?.themeFontImportUrl && (
+        <link rel="stylesheet" href={data.header.themeFontImportUrl} />
+      )}
+      <style dangerouslySetInnerHTML={{ __html: `
+        :root {
+          ${data?.header?.themeColorClay ? `--color-clay-hex: ${data.header.themeColorClay};` : ''}
+          ${data?.header?.themeColorMoss ? `--color-moss-hex: ${data.header.themeColorMoss};` : ''}
+          ${data?.header?.themeColorIndigo ? `--color-indigo-hex: ${data.header.themeColorIndigo};` : ''}
+          ${data?.header?.themeColorCharcoal ? `--color-charcoal-hex: ${data.header.themeColorCharcoal};` : ''}
+          ${data?.header?.themeColorIvory ? `--color-ivory-hex: ${data.header.themeColorIvory};` : ''}
+          
+          ${data?.header?.themeFontFamilyHeadings ? `--font-headings-custom: "${data.header.themeFontFamilyHeadings}", serif;` : ''}
+          ${data?.header?.themeFontFamilyBody ? `--font-body-custom: "${data.header.themeFontFamilyBody}", sans-serif;` : ''}
+        }
+        
+        /* Overwriting the dynamic theme utility classes in real-time */
+        ${data?.header?.themeColorClay ? `
+          .bg-clay { background-color: var(--color-clay-hex) !important; }
+          .text-clay { color: var(--color-clay-hex) !important; }
+          .border-clay { border-color: var(--color-clay-hex) !important; }
+          .hover\\:bg-clay:hover { background-color: var(--color-clay-hex) !important; }
+          .hover\\:text-clay:hover { color: var(--color-clay-hex) !important; }
+          .hover\\:border-clay:hover { border-color: var(--color-clay-hex) !important; }
+          .selection\\:bg-clay::selection { background-color: var(--color-clay-hex) !important; }
+        ` : ''}
+        
+        ${data?.header?.themeColorMoss ? `
+          .bg-moss { background-color: var(--color-moss-hex) !important; }
+          .text-moss { color: var(--color-moss-hex) !important; }
+          .border-moss { border-color: var(--color-moss-hex) !important; }
+          .hover\\:bg-moss:hover { background-color: var(--color-moss-hex) !important; }
+          .hover\\:text-moss:hover { color: var(--color-moss-hex) !important; }
+        ` : ''}
+        
+        ${data?.header?.themeColorIndigo ? `
+          .bg-indigo { background-color: var(--color-indigo-hex) !important; }
+          .text-indigo { color: var(--color-indigo-hex) !important; }
+          .border-indigo { border-color: var(--color-indigo-hex) !important; }
+        ` : ''}
+        
+        ${data?.header?.themeColorCharcoal ? `
+          .bg-charcoal { background-color: var(--color-charcoal-hex) !important; }
+          .text-charcoal { color: var(--color-charcoal-hex) !important; }
+          .border-charcoal { border-color: var(--color-charcoal-hex) !important; }
+        ` : ''}
+        
+        ${data?.header?.themeColorIvory ? `
+          .bg-ivory { background-color: var(--color-ivory-hex) !important; }
+          .text-ivory { color: var(--color-ivory-hex) !important; }
+          .border-ivory { border-color: var(--color-ivory-hex) !important; }
+        ` : ''}
+
+        ${data?.header?.themeFontFamilyHeadings ? `
+          h1, h2, h3, h4, h5, h6, .font-serif {
+            font-family: var(--font-headings-custom) !important;
+          }
+        ` : ''}
+        
+        ${data?.header?.themeFontFamilyBody ? `
+          body, p, span, div:not(.font-mono), section, a, button, label, input, textarea {
+            font-family: var(--font-body-custom) !important;
+          }
+        ` : ''}
+
+        /* Responsive custom sizes for homepage hero title & subtitle */
+        .hero-custom-title {
+          font-size: ${data?.header.heroTitleSize ? `${data.header.heroTitleSize}px` : '72px'};
+        }
+        .hero-custom-sub {
+          font-size: ${data?.header.heroSubSize ? `${data.header.heroSubSize}px` : '16px'};
+        }
+        
+        @media (max-width: 640px) {
+          .hero-custom-title {
+            font-size: ${data?.header.heroTitleSize ? `${Math.max(30, Math.round(data.header.heroTitleSize * 0.65))}px` : '40px'} !important;
+            line-height: 1.15 !important;
+          }
+          .hero-custom-sub {
+            font-size: ${data?.header.heroSubSize ? `${Math.max(12, Math.round(data.header.heroSubSize * 0.85))}px` : '14px'} !important;
+          }
+        }
+      ` }} />
+
       {/* Dynamic Navbar */}
       <Navbar
         onOpenCms={() => setIsCmsOpen(true)}
@@ -88,6 +172,8 @@ export default function App() {
         isAdmin={isAdmin}
         onLogout={handleLogout}
         header={data?.header}
+        customPages={data?.customPages}
+        onSelectPage={setSelectedCustomPage}
       />
 
       {loading ? (
@@ -211,60 +297,91 @@ export default function App() {
               Experience · Connect · Belong
             </div>
 
-            <div className="relative z-10 max-w-4xl mx-auto px-[5vw] self-start space-y-6">
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="text-clay text-[0.7rem] tracking-[0.38em] uppercase flex items-center gap-3"
-              >
-                <span className="w-10 h-[1px] bg-clay block"></span>
-                <span>Dubai's Immersive Cultural Hub</span>
-              </motion.div>
+            {(() => {
+              const alignment = data?.header.heroTextAlignment || "left";
+              let containerAlignClass = "self-start text-left ml-0 mr-auto items-start";
+              let buttonAlignClass = "justify-start";
+              let labelAlignClass = "justify-start";
 
-              <motion.h1
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.9, delay: 0.1 }}
-                className="font-serif text-5xl sm:text-7xl font-light text-white leading-[1.08] tracking-tight"
-                dangerouslySetInnerHTML={{ __html: data?.header.heroTitle || "Deep Roots.<br><em>Open Horizons.</em>" }}
-              />
+              if (alignment === "center") {
+                containerAlignClass = "self-center text-center mx-auto items-center flex flex-col";
+                buttonAlignClass = "justify-center";
+                labelAlignClass = "justify-center";
+              } else if (alignment === "right") {
+                containerAlignClass = "self-end text-right mr-0 ml-auto items-end flex flex-col";
+                buttonAlignClass = "justify-end";
+                labelAlignClass = "justify-end";
+              }
 
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.9, delay: 0.2 }}
-                className="text-white/60 font-light text-sm sm:text-base max-w-xl leading-relaxed"
-              >
-                {data?.header.heroSub}
-              </motion.p>
+              return (
+                <div className={`relative z-10 max-w-4xl mx-auto px-[5vw] space-y-6 ${containerAlignClass}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className={`text-clay text-[0.7rem] tracking-[0.38em] uppercase flex items-center gap-3 ${labelAlignClass}`}
+                  >
+                    {alignment !== "right" && <span className="w-10 h-[1px] bg-clay block"></span>}
+                    <span>Dubai's Immersive Cultural Hub</span>
+                    {alignment !== "left" && <span className="w-10 h-[1px] bg-clay block"></span>}
+                  </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="flex gap-4 flex-wrap pt-6"
-              >
-                <a
-                  href="#experiences"
-                  className="bg-clay hover:bg-terracotta text-white px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-medium transition-all shadow-md hover:-translate-y-[1px]"
-                >
-                  Plan a Visit
-                </a>
-                <button
-                  onClick={() => triggerBooking('school')}
-                  className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer"
-                >
-                  For Schools
-                </button>
-                <button
-                  onClick={() => triggerBooking('corporate')}
-                  className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer"
-                >
-                  For Corporates
-                </button>
-              </motion.div>
-            </div>
+                  <motion.h1
+                    initial={{ opacity: 0, y: 25 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.9, delay: 0.1 }}
+                    className="font-serif font-light text-white leading-[1.08] tracking-tight hero-custom-title"
+                    dangerouslySetInnerHTML={{ __html: data?.header.heroTitle || "Deep Roots.<br><em>Open Horizons.</em>" }}
+                  />
+
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.9, delay: 0.2 }}
+                    className="text-white/60 font-light max-w-xl leading-relaxed hero-custom-sub"
+                  >
+                    {data?.header.heroSub}
+                  </motion.p>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    className={`flex gap-4 flex-wrap pt-6 w-full ${buttonAlignClass}`}
+                  >
+                    <a
+                      href={data?.header.heroBtn1Link || "#experiences"}
+                      className="bg-clay hover:bg-terracotta text-white px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-medium transition-all shadow-md hover:-translate-y-[1px] inline-flex items-center"
+                    >
+                      {data?.header.heroBtn1Text || "Plan a Visit"}
+                    </a>
+                    {data?.header.heroBtn2Text ? (
+                      <a
+                        href={data.header.heroBtn2Link || "#contact"}
+                        className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer inline-flex items-center"
+                      >
+                        {data.header.heroBtn2Text}
+                      </a>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => triggerBooking('school')}
+                          className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer"
+                        >
+                          For Schools
+                        </button>
+                        <button
+                          onClick={() => triggerBooking('corporate')}
+                          className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer"
+                        >
+                          For Corporates
+                        </button>
+                      </>
+                    )}
+                  </motion.div>
+                </div>
+              );
+            })()}
 
             <div className="absolute bottom-10 left-[5vw] z-10 flex items-center gap-3 text-white/30 text-[0.65rem] tracking-[0.25em] uppercase pointer-events-none select-none">
               <span>Scroll</span>
@@ -704,17 +821,25 @@ export default function App() {
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-14 border-b border-white/5">
               {/* Logo block left side */}
               <div className="lg:col-span-2 space-y-4">
-                <AfroBaobabLogo
-                  variant="full"
-                  color="#CB6A4A"
-                  textClassName="text-[#FAF8F4]"
-                  logoTextPrimary={data?.header.logoTextPrimary}
-                  logoTextSecondary={data?.header.logoTextSecondary}
-                  logoSub={data?.header.logoSub}
-                  logoMode={data?.header.logoMode}
-                  logoImageUrl={data?.header.logoImageUrl}
-                  logoEmblemColor={data?.header.logoEmblemColor}
-                />
+                {(() => {
+                  const isMatchHeader = !data?.header.footerLogoMode || data.header.footerLogoMode === "match-header";
+                  const finalFooterLogoMode = isMatchHeader ? data?.header.logoMode : data?.header.footerLogoMode;
+                  const finalFooterLogoImageUrl = isMatchHeader ? data?.header.logoImageUrl : data?.header.footerLogoImageUrl;
+                  return (
+                    <AfroBaobabLogo
+                      variant="full"
+                      color="#CB6A4A"
+                      textClassName="text-[#FAF8F4]"
+                      logoTextPrimary={data?.header.logoTextPrimary}
+                      logoTextSecondary={data?.header.logoTextSecondary}
+                      logoSub={data?.header.logoSub}
+                      logoMode={finalFooterLogoMode}
+                      logoImageUrl={finalFooterLogoImageUrl}
+                      logoEmblemColor={data?.header.logoEmblemColor}
+                      scalePercent={data?.header.footerLogoSize}
+                    />
+                  );
+                })()}
                 <p className="text-white/30 text-xs leading-relaxed max-w-sm font-sans pt-3">
                   {data?.header.footerDesc}
                 </p>
@@ -746,9 +871,10 @@ export default function App() {
               <div>
                 <div className="text-[10px] tracking-widest text-white/40 uppercase font-mono font-medium mb-4">Location</div>
                 <div className="text-xs leading-relaxed space-y-1 font-mono text-white/30">
-                  <p>Al Quoz Creative Zone</p>
-                  <p>Dubai, UAE</p>
-                  <p className="pt-2 text-clay hover:underline cursor-pointer">Find us on map ↗</p>
+                  <p>{data?.header.contactAddress || "Al Quoz Creative Zone, Dubai, UAE"}</p>
+                  {data?.header.contactHours && <p className="text-white/25 text-[11px]">Hours: {data.header.contactHours}</p>}
+                  {data?.header.contactPhone && <p className="text-white/25 text-[11px]">Phone: {data.header.contactPhone}</p>}
+                  {data?.header.contactEmail && <p className="text-clay text-[11px] block hover:underline"><a href={`mailto:${data.header.contactEmail}`}>{data.header.contactEmail}</a></p>}
                 </div>
               </div>
             </div>
@@ -756,9 +882,25 @@ export default function App() {
             <div className="max-w-7xl mx-auto pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-mono text-white/25">
               <span>© {new Date().getFullYear()} Afro Baobab Cultural Hub. Active Content Desk setup.</span>
               <div className="flex gap-4">
-                <a href="#" className="hover:text-clay transition-colors">Instagram</a>
-                <a href="#" className="hover:text-clay transition-colors">Facebook</a>
-                <a href="#" className="hover:text-clay transition-colors">LinkedIn</a>
+                {data?.header.socialInstagram ? (
+                  <a href={data.header.socialInstagram} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">Instagram</a>
+                ) : (
+                  <a href="#" className="hover:text-clay transition-colors">Instagram</a>
+                )}
+                {data?.header.socialFacebook ? (
+                  <a href={data.header.socialFacebook} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">Facebook</a>
+                ) : (
+                  <a href="#" className="hover:text-clay transition-colors">Facebook</a>
+                )}
+                {data?.header.socialTwitter && (
+                  <a href={data.header.socialTwitter} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">Twitter</a>
+                )}
+                {data?.header.socialTiktok && (
+                  <a href={data.header.socialTiktok} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">TikTok</a>
+                )}
+                {data?.header.socialYoutube && (
+                  <a href={data.header.socialYoutube} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">YouTube</a>
+                )}
               </div>
             </div>
           </footer>
@@ -783,7 +925,55 @@ export default function App() {
             isOpen={isBookingOpen}
             onClose={() => setIsBookingOpen(false)}
             defaultType={bookingType}
+            recipientEmail={data?.header?.inquiryRecipientEmail}
           />
+        )}
+      </AnimatePresence>
+
+      {/* CUSTOM CMS PAGES VIEWER MODAL */}
+      <AnimatePresence>
+        {selectedCustomPage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl bg-white border border-sand rounded-[3px] shadow-2xl p-6 sm:p-10 max-h-[85vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setSelectedCustomPage(null)}
+                className="absolute top-4 right-4 text-charcoal/50 hover:text-clay transition-colors cursor-pointer p-1 bg-transparent border-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="space-y-6">
+                <div>
+                  <div className="text-[10px] tracking-widest text-clay uppercase font-mono font-bold mb-1">
+                    African Baobab Hub · Page Custom View
+                  </div>
+                  <h1 className="font-serif text-3xl sm:text-4xl font-light text-charcoal tracking-tight leading-none mt-1">
+                    {selectedCustomPage.title}
+                  </h1>
+                </div>
+
+                <div className="h-[1px] bg-sand/20" />
+
+                <div className="text-charcoal/80 text-sm leading-relaxed whitespace-pre-wrap font-sans max-w-prose">
+                  {selectedCustomPage.content}
+                </div>
+
+                <div className="pt-6 flex justify-end">
+                  <button
+                    onClick={() => setSelectedCustomPage(null)}
+                    className="bg-charcoal text-white hover:bg-clay font-mono uppercase tracking-widest text-[10px] px-6 py-2.5 rounded-[2px] transition-colors cursor-pointer border-0"
+                  >
+                    Close Page
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

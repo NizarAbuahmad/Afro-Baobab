@@ -1,9 +1,10 @@
 import { useState, useEffect, FormEvent } from "react";
-import { CmsData, Experience, Exhibition, EventItem, Booking } from "../types";
+import { CmsData, Experience, Exhibition, EventItem, Booking, CustomPage } from "../types";
 import { 
   X, Check, Trash2, Plus, LogOut, Settings, 
   BookOpen, Calendar, HelpCircle, Mail, Phone,
-  Bookmark, Edit3, ArrowRight, ShieldCheck, Lock, Unlock 
+  Bookmark, Edit3, ArrowRight, ShieldCheck, Lock, Unlock,
+  FileText, Globe, Palette, Type, UploadIcon
 } from "lucide-react";
 import {
   cmsLogin,
@@ -15,7 +16,10 @@ import {
   saveCmsEvent,
   deleteCmsEvent,
   updateCmsBookingStatus,
-  deleteCmsBooking
+  deleteCmsBooking,
+  saveCmsPage,
+  deleteCmsPage,
+  uploadCmsImage
 } from "../lib/cmsClient";
 
 interface CmsDashboardProps {
@@ -25,7 +29,46 @@ interface CmsDashboardProps {
   onRefresh: () => void;
 }
 
-type TabType = "general" | "experiences" | "exhibitions" | "events" | "bookings";
+type TabType = "general" | "experiences" | "exhibitions" | "events" | "bookings" | "pages";
+
+function FileInputButton({ onUploaded, label = "Upload from Computer" }: { onUploaded: (url: string) => void; label?: string }) {
+  const [uploading, setUploading] = useState(false);
+  return (
+    <div className="flex items-center gap-2 mt-1.5">
+      <label className="text-[10px] bg-clay hover:bg-terracotta text-white px-3 py-2 rounded-[2px] font-mono uppercase tracking-widest cursor-pointer font-bold inline-flex items-center gap-1.5 select-none transition-all shadow-sm hover:-translate-y-[0.5px] cursor-pointer">
+        {uploading ? "Uploading file..." : label}
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={uploading}
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setUploading(true);
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+              const base64 = reader.result as string;
+              try {
+                const res = await uploadCmsImage(file.name, base64);
+                if (res.success && res.url) {
+                  onUploaded(res.url);
+                } else {
+                  alert("Upload failed: " + (res.error || "Integrity error"));
+                }
+              } catch (err) {
+                alert("Upload backend connection failed.");
+              } finally {
+                setUploading(false);
+              }
+            };
+            reader.readAsDataURL(file);
+          }}
+        />
+      </label>
+    </div>
+  );
+}
 
 export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDashboardProps) {
   const [sessionToken, setSessionToken] = useState<string | null>(
@@ -71,6 +114,59 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [aboutFeaturedDesc, setAboutFeaturedDesc] = useState("");
   const [aboutFeaturedImageMode, setAboutFeaturedImageMode] = useState<"pattern" | "custom-image">("pattern");
   const [aboutFeaturedImageUrl, setAboutFeaturedImageUrl] = useState("");
+
+  // Extended theme color states
+  const [themeColorClay, setThemeColorClay] = useState("#CB6A4A");
+  const [themeColorMoss, setThemeColorMoss] = useState("#202c1c");
+  const [themeColorIndigo, setThemeColorIndigo] = useState("#0d1622");
+  const [themeColorCharcoal, setThemeColorCharcoal] = useState("#19120c");
+  const [themeColorIvory, setThemeColorIvory] = useState("#FAF8F4");
+
+  // Custom font family states
+  const [themeFontFamilyHeadings, setThemeFontFamilyHeadings] = useState("Space Grotesk");
+  const [themeFontFamilyBody, setThemeFontFamilyBody] = useState("Inter");
+  const [themeFontImportUrl, setThemeFontImportUrl] = useState("");
+
+  // Custom Hero buttons states
+  const [heroBtn1Text, setHeroBtn1Text] = useState("Explore Experience Zones");
+  const [heroBtn1Link, setHeroBtn1Link] = useState("#experiences");
+  const [heroBtn2Text, setHeroBtn2Text] = useState("Reserve a Visit");
+  const [heroBtn2Link, setHeroBtn2Link] = useState("book");
+
+  // Contact list states
+  const [contactPhone, setContactPhone] = useState("+971 4 400 0000");
+  const [contactEmail, setContactEmail] = useState("info@afrobaobab.com");
+  const [contactAddress, setContactAddress] = useState("Alserkal Avenue, Al Quoz, Dubai, UAE");
+  const [contactHours, setContactHours] = useState("Mon - Sun: 10:00 AM - 9:00 PM");
+
+  // Social media link states
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialFacebook, setSocialFacebook] = useState("");
+  const [socialTwitter, setSocialTwitter] = useState("");
+  const [socialTiktok, setSocialTiktok] = useState("");
+  const [socialYoutube, setSocialYoutube] = useState("");
+
+  // Inquiry target email state
+  const [inquiryRecipientEmail, setInquiryRecipientEmail] = useState("inquiry@afrobaobab.com");
+
+  // Brand Logo scale dimensions
+  const [navbarLogoSize, setNavbarLogoSize] = useState<number>(100);
+  const [footerLogoSize, setFooterLogoSize] = useState<number>(100);
+
+  // Footer Logo Customize
+  const [footerLogoMode, setFooterLogoMode] = useState<"default-emblem" | "custom-text" | "image-url" | "match-header">("match-header");
+  const [footerLogoImageUrl, setFooterLogoImageUrl] = useState("");
+
+  // Hero text layout location and size states
+  const [heroTextAlignment, setHeroTextAlignment] = useState<"left" | "center" | "right">("left");
+  const [heroTitleSize, setHeroTitleSize] = useState<number>(72);
+  const [heroSubSize, setHeroSubSize] = useState<number>(18);
+
+  // Custom subpage manager states
+  const [pageTitle, setPageTitle] = useState("");
+  const [pageSlug, setPageSlug] = useState("");
+  const [pageContent, setPageContent] = useState("");
+  const [pageShownInNavbar, setPageShownInNavbar] = useState(true);
 
   // Dynamic Item states
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -129,6 +225,44 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
       setAboutFeaturedDesc(data.header.aboutFeaturedDesc || "");
       setAboutFeaturedImageMode(data.header.aboutFeaturedImageMode || "pattern");
       setAboutFeaturedImageUrl(data.header.aboutFeaturedImageUrl || "");
+
+      // Themes, Fonts, inquiry, social, buttons, contact list initial values
+      setThemeColorClay(data.header.themeColorClay || "#CB6A4A");
+      setThemeColorMoss(data.header.themeColorMoss || "#202c1c");
+      setThemeColorIndigo(data.header.themeColorIndigo || "#0d1622");
+      setThemeColorCharcoal(data.header.themeColorCharcoal || "#19120c");
+      setThemeColorIvory(data.header.themeColorIvory || "#FAF8F4");
+
+      setThemeFontFamilyHeadings(data.header.themeFontFamilyHeadings || "Space Grotesk");
+      setThemeFontFamilyBody(data.header.themeFontFamilyBody || "Inter");
+      setThemeFontImportUrl(data.header.themeFontImportUrl || "");
+
+      setHeroBtn1Text(data.header.heroBtn1Text || "Explore Experience Zones");
+      setHeroBtn1Link(data.header.heroBtn1Link || "#experiences");
+      setHeroBtn2Text(data.header.heroBtn2Text || "Reserve a Visit");
+      setHeroBtn2Link(data.header.heroBtn2Link || "book");
+
+      setContactPhone(data.header.contactPhone || "+971 4 400 0000");
+      setContactEmail(data.header.contactEmail || "info@afrobaobab.com");
+      setContactAddress(data.header.contactAddress || "Alserkal Avenue, Al Quoz, Dubai, UAE");
+      setContactHours(data.header.contactHours || "Mon - Sun: 10:00 AM - 9:00 PM");
+
+      setSocialInstagram(data.header.socialInstagram || "");
+      setSocialFacebook(data.header.socialFacebook || "");
+      setSocialTwitter(data.header.socialTwitter || "");
+      setSocialTiktok(data.header.socialTiktok || "");
+      setSocialYoutube(data.header.socialYoutube || "");
+
+      setInquiryRecipientEmail(data.header.inquiryRecipientEmail || "inquiry@afrobaobab.com");
+      setNavbarLogoSize(data.header.navbarLogoSize || 100);
+      setFooterLogoSize(data.header.footerLogoSize || 100);
+
+      setFooterLogoMode(data.header.footerLogoMode || "match-header");
+      setFooterLogoImageUrl(data.header.footerLogoImageUrl || "");
+
+      setHeroTextAlignment(data.header.heroTextAlignment || "left");
+      setHeroTitleSize(data.header.heroTitleSize || 72);
+      setHeroSubSize(data.header.heroSubSize || 18);
     }
   }, [data]);
 
@@ -175,10 +309,17 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         logoImageUrl,
         logoEmblemColor,
 
+        footerLogoMode,
+        footerLogoImageUrl,
+
         heroWallpaperMode,
         heroWallpaperUrl,
         heroGradientStart,
         heroGradientEnd,
+
+        heroTextAlignment,
+        heroTitleSize: Number(heroTitleSize) || 72,
+        heroSubSize: Number(heroSubSize) || 18,
 
         aboutLabel,
         aboutHeading,
@@ -190,6 +331,42 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         aboutFeaturedDesc,
         aboutFeaturedImageMode,
         aboutFeaturedImageUrl,
+
+        // Theme Style Configurations
+        themeColorClay,
+        themeColorMoss,
+        themeColorIndigo,
+        themeColorCharcoal,
+        themeColorIvory,
+        themeFontFamilyHeadings,
+        themeFontFamilyBody,
+        themeFontImportUrl,
+
+        // Sizing Slider Values
+        navbarLogoSize: Number(navbarLogoSize) || 100,
+        footerLogoSize: Number(footerLogoSize) || 100,
+
+        // Custom Buttons Link-text configs
+        heroBtn1Text,
+        heroBtn1Link,
+        heroBtn2Text,
+        heroBtn2Link,
+
+        // Custom Email
+        inquiryRecipientEmail,
+
+        // Contact particulars
+        contactPhone,
+        contactEmail,
+        contactAddress,
+        contactHours,
+
+        // Social Connections
+        socialInstagram,
+        socialFacebook,
+        socialTwitter,
+        socialTiktok,
+        socialYoutube,
       });
       if (res.success) {
         alert("Homepage configuration saved successfully!");
@@ -547,15 +724,28 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                     </div>
 
                     {logoMode === "image-url" && (
-                      <div>
-                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Custom Logo Image URL</label>
-                        <input
-                          type="text"
-                          value={logoImageUrl}
-                          onChange={(e) => setLogoImageUrl(e.target.value)}
-                          placeholder="E.g. /images/my-logo.png"
-                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
-                        />
+                      <div className="bg-sand/10 p-3 rounded-[2px] border border-sand/20 space-y-2">
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Custom Logo Image URL / Path</label>
+                        <div className="flex gap-4 items-start">
+                          <div className="flex-1 space-y-1.5">
+                            <input
+                              type="text"
+                              value={logoImageUrl}
+                              onChange={(e) => setLogoImageUrl(e.target.value)}
+                              placeholder="E.g. /images/my-logo.png"
+                              className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                            />
+                            <div className="flex items-center gap-2">
+                              <FileInputButton onUploaded={setLogoImageUrl} label="Upload Logo from Computer" />
+                              <span className="text-[10px] text-charcoal/50 font-sans">Or browse a local JPG/PNG</span>
+                            </div>
+                          </div>
+                          {logoImageUrl && (
+                            <div className="w-16 h-16 bg-white border border-sand/30 rounded-[2px] p-1 flex items-center justify-center shrink-0 shadow-xs">
+                              <img src={logoImageUrl} alt="Logo Preview" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -588,6 +778,52 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         />
                       </div>
                     </div>
+
+                    {/* FOOTER SPECIFIC LOGO CONTROLS */}
+                    <div className="border-t border-sand/15 pt-3 space-y-3">
+                      <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block">Footer Specific Logo Configuration</span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sand/5 p-3 rounded-[2px] border border-sand/15">
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono">Footer Logo Mode</label>
+                          <select
+                            value={footerLogoMode}
+                            onChange={(e) => setFooterLogoMode(e.target.value as any)}
+                            className="w-full bg-white border border-sand/40 px-2 py-1.5 text-xs text-charcoal rounded-[2px]"
+                          >
+                            <option value="match-header">Same as Header Mode</option>
+                            <option value="default-emblem">Default Baobab Emblem & Text</option>
+                            <option value="custom-text">Pure Custom Typography (No Emblem)</option>
+                            <option value="image-url">Custom Logo Image (Asset URL)</option>
+                          </select>
+                        </div>
+                        {footerLogoMode === "image-url" ? (
+                          <div className="space-y-1.5">
+                            <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono">Footer Custom Logo Image URL</label>
+                            <div className="flex gap-2 items-start">
+                              <div className="flex-1 space-y-1">
+                                <input
+                                  type="text"
+                                  value={footerLogoImageUrl}
+                                  onChange={(e) => setFooterLogoImageUrl(e.target.value)}
+                                  placeholder="E.g. /images/footer-logo.png"
+                                  className="w-full bg-white border border-sand/40 px-2 py-1 text-xs text-charcoal rounded-[2px]"
+                                />
+                                <FileInputButton onUploaded={setFooterLogoImageUrl} label="Upload Footer Logo" />
+                              </div>
+                              {footerLogoImageUrl && (
+                                <div className="w-12 h-12 bg-white border border-sand/30 rounded-[2px] p-0.5 flex items-center justify-center shrink-0">
+                                  <img src={footerLogoImageUrl} alt="Footer Logo Preview" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-[10px] text-charcoal/40 font-sans italic pt-4">
+                            Footer logo matches the header mode.
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* WALLPAPER & GRADIENT SECTION */}
@@ -609,14 +845,29 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       </div>
                       <div>
                         <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Custom Wallpaper Image URL</label>
-                        <input
-                          type="text"
-                          disabled={heroWallpaperMode !== "custom-image"}
-                          value={heroWallpaperUrl}
-                          onChange={(e) => setHeroWallpaperUrl(e.target.value)}
-                          placeholder="Requires photo wallpaper background mode"
-                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px] disabled:opacity-50"
-                        />
+                        <div className="flex gap-4 items-start">
+                          <div className="flex-1 space-y-1.5">
+                            <input
+                              type="text"
+                              disabled={heroWallpaperMode !== "custom-image"}
+                              value={heroWallpaperUrl}
+                              onChange={(e) => setHeroWallpaperUrl(e.target.value)}
+                              placeholder="Requires photo wallpaper background mode"
+                              className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px] disabled:opacity-50"
+                            />
+                            {heroWallpaperMode === "custom-image" && (
+                              <div className="flex items-center gap-2">
+                                <FileInputButton onUploaded={setHeroWallpaperUrl} label="Upload Wallpaper" />
+                                <span className="text-[10px] text-charcoal/50 font-sans">Or local file</span>
+                              </div>
+                            )}
+                          </div>
+                          {heroWallpaperUrl && (
+                            <div className="w-20 h-14 bg-white border border-sand/30 rounded-[2px] overflow-hidden flex items-center justify-center shrink-0 shadow-xs relative">
+                              <img src={heroWallpaperUrl} alt="Wallpaper Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -666,6 +917,56 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                           className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px] resize-none"
                         />
                       </div>
+
+                      {/* Sizing & Position Layout customization */}
+                      <div className="border-t border-sand/15 pt-3 space-y-3">
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block">Typography Sizing & Position Layout</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-sand/5 p-3 rounded-[2px] border border-sand/15">
+                          <div>
+                            <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Text Placement Alignment</label>
+                            <select
+                              value={heroTextAlignment}
+                              onChange={(e) => setHeroTextAlignment(e.target.value as any)}
+                              className="w-full bg-white border border-sand/40 px-2.5 py-1.5 text-xs text-charcoal rounded-[2px]"
+                            >
+                              <option value="left">Left Aligned (Default)</option>
+                              <option value="center">Center Balanced</option>
+                              <option value="right">Right Aligned</option>
+                            </select>
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-center text-[9px] tracking-widest uppercase text-charcoal/60 font-mono font-medium mb-1">
+                              <span>Headline Text Size</span>
+                              <span className="font-mono text-clay font-bold">{heroTitleSize}px</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="32"
+                              max="120"
+                              step="2"
+                              value={heroTitleSize}
+                              onChange={(e) => setHeroTitleSize(Number(e.target.value))}
+                              className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
+                            />
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-center text-[9px] tracking-widest uppercase text-charcoal/60 font-mono font-medium mb-1">
+                              <span>Tagline Text Size</span>
+                              <span className="font-mono text-clay font-bold">{heroSubSize}px</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="12"
+                              max="32"
+                              step="1"
+                              value={heroSubSize}
+                              onChange={(e) => setHeroSubSize(Number(e.target.value))}
+                              className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       <div>
                         <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Hero Rotating Tickers (comma-separated)</label>
                         <input
@@ -769,14 +1070,28 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       </div>
                       <div>
                         <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Featured Graphic Portrait image URL</label>
-                        <input
-                          type="text"
-                          disabled={aboutFeaturedImageMode !== "custom-image"}
-                          value={aboutFeaturedImageUrl}
-                          onChange={(e) => setAboutFeaturedImageUrl(e.target.value)}
-                          placeholder="Requires Custom Uploaded Image mode"
-                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px] disabled:opacity-50"
-                        />
+                        <div className="flex gap-4 items-start">
+                          <div className="flex-1 space-y-1.5">
+                            <input
+                              type="text"
+                              disabled={aboutFeaturedImageMode !== "custom-image"}
+                              value={aboutFeaturedImageUrl}
+                              onChange={(e) => setAboutFeaturedImageUrl(e.target.value)}
+                              placeholder="Requires Custom Uploaded Image mode"
+                              className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px] disabled:opacity-50"
+                            />
+                            {aboutFeaturedImageMode === "custom-image" && (
+                              <div className="flex items-center gap-2">
+                                <FileInputButton onUploaded={setAboutFeaturedImageUrl} label="Upload Portrait" />
+                              </div>
+                            )}
+                          </div>
+                          {aboutFeaturedImageUrl && (
+                            <div className="w-16 h-16 bg-white border border-sand/30 rounded-[2px] overflow-hidden flex items-center justify-center shrink-0 shadow-xs relative">
+                              <img src={aboutFeaturedImageUrl} alt="Story Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -791,9 +1106,328 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                     </div>
                   </div>
 
+                  {/* CENTRAL PALETTE & INTERACTION DESK */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">3. Design Color Palette & Custom Typography</h4>
+                    
+                    <p className="text-[11px] text-charcoal/60 leading-relaxed font-sans mb-2">
+                       Define the dynamic global style system of your site. Modify colors using hex values or the color pickers, and embed custom Google Fonts directly.
+                    </p>
+
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div className="bg-sand/10 p-2 border border-sand/20 rounded-[2px] flex flex-col items-center col-span-1">
+                        <label className="block text-[9px] tracking-wider uppercase text-charcoal/60 mb-1 font-mono font-bold text-center">Clay Accent</label>
+                        <input
+                          type="color"
+                          value={themeColorClay}
+                          onChange={(e) => setThemeColorClay(e.target.value)}
+                          className="w-10 h-8 rounded cursor-pointer border-0 bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={themeColorClay}
+                          onChange={(e) => setThemeColorClay(e.target.value)}
+                          className="w-full text-center text-[10px] font-mono mt-1 px-1 bg-white border border-sand/30 rounded"
+                        />
+                      </div>
+                      <div className="bg-sand/10 p-2 border border-sand/20 rounded-[2px] flex flex-col items-center col-span-1">
+                        <label className="block text-[9px] tracking-wider uppercase text-charcoal/60 mb-1 font-mono font-bold text-center">Moss Deep</label>
+                        <input
+                          type="color"
+                          value={themeColorMoss}
+                          onChange={(e) => setThemeColorMoss(e.target.value)}
+                          className="w-10 h-8 rounded cursor-pointer border-0 bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={themeColorMoss}
+                          onChange={(e) => setThemeColorMoss(e.target.value)}
+                          className="w-full text-center text-[10px] font-mono mt-1 px-1 bg-white border border-sand/30 rounded"
+                        />
+                      </div>
+                      <div className="bg-sand/10 p-2 border border-sand/20 rounded-[2px] flex flex-col items-center col-span-1">
+                        <label className="block text-[9px] tracking-wider uppercase text-charcoal/60 mb-1 font-mono font-bold text-center">Indigo Midnight</label>
+                        <input
+                          type="color"
+                          value={themeColorIndigo}
+                          onChange={(e) => setThemeColorIndigo(e.target.value)}
+                          className="w-10 h-8 rounded cursor-pointer border-0 bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={themeColorIndigo}
+                          onChange={(e) => setThemeColorIndigo(e.target.value)}
+                          className="w-full text-center text-[10px] font-mono mt-1 px-1 bg-white border border-sand/30 rounded"
+                        />
+                      </div>
+                      <div className="bg-sand/10 p-2 border border-sand/20 rounded-[2px] flex flex-col items-center col-span-1">
+                        <label className="block text-[9px] tracking-wider uppercase text-charcoal/60 mb-1 font-mono font-bold text-center">Charcoal Noir</label>
+                        <input
+                          type="color"
+                          value={themeColorCharcoal}
+                          onChange={(e) => setThemeColorCharcoal(e.target.value)}
+                          className="w-10 h-8 rounded cursor-pointer border-0 bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={themeColorCharcoal}
+                          onChange={(e) => setThemeColorCharcoal(e.target.value)}
+                          className="w-full text-center text-[10px] font-mono mt-1 px-1 bg-white border border-sand/30 rounded"
+                        />
+                      </div>
+                      <div className="bg-sand/10 p-2 border border-sand/20 rounded-[2px] flex flex-col items-center col-span-1">
+                        <label className="block text-[9px] tracking-wider uppercase text-charcoal/60 mb-1 font-mono font-bold text-center">Ivory White</label>
+                        <input
+                          type="color"
+                          value={themeColorIvory}
+                          onChange={(e) => setThemeColorIvory(e.target.value)}
+                          className="w-10 h-8 rounded cursor-pointer border-0 bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={themeColorIvory}
+                          onChange={(e) => setThemeColorIvory(e.target.value)}
+                          className="w-full text-center text-[10px] font-mono mt-1 px-1 bg-white border border-sand/30 rounded"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-sand/10 pt-3 mt-2">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Headings Font Family Name</label>
+                        <input
+                          type="text"
+                          value={themeFontFamilyHeadings}
+                          onChange={(e) => setThemeFontFamilyHeadings(e.target.value)}
+                          placeholder="E.g. Space Grotesk"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Body Font Family Name</label>
+                        <input
+                          type="text"
+                          value={themeFontFamilyBody}
+                          onChange={(e) => setThemeFontFamilyBody(e.target.value)}
+                          placeholder="E.g. Inter"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium font-bold text-clay">Google Font Embed Import URL</label>
+                        <input
+                          type="text"
+                          value={themeFontImportUrl}
+                          onChange={(e) => setThemeFontImportUrl(e.target.value)}
+                          placeholder="E.g. https://fonts.googleapis.com/css2?family=Space+Grotesk..."
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* LOGO SIZING RANGE SLIDERS */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">4. Logo Size & Sizing Controls</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="bg-sand/10 p-3 rounded-[2px] space-y-2 border border-sand/20">
+                        <div className="flex justify-between items-center text-[10px] tracking-widest uppercase text-charcoal/60 font-mono font-medium">
+                          <span>Navbar Header Logo Size</span>
+                          <span className="font-mono text-clay font-bold">{navbarLogoSize}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="45"
+                          max="250"
+                          step="5"
+                          value={navbarLogoSize}
+                          onChange={(e) => setNavbarLogoSize(Number(e.target.value))}
+                          className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
+                        />
+                        <span className="block text-[9px] text-[#888] leading-none">Slider adjusts the header navbar brand logo scale</span>
+                      </div>
+                      <div className="bg-sand/10 p-3 rounded-[2px] space-y-2 border border-sand/20">
+                        <div className="flex justify-between items-center text-[10px] tracking-widest uppercase text-charcoal/60 font-mono font-medium">
+                          <span>Footer Logo Size</span>
+                          <span className="font-mono text-clay font-bold">{footerLogoSize}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="45"
+                          max="250"
+                          step="5"
+                          value={footerLogoSize}
+                          onChange={(e) => setFooterLogoSize(Number(e.target.value))}
+                          className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
+                        />
+                        <span className="block text-[9px] text-[#888] leading-none">Slider adjusts the footer brand logo scale</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ACTION HERO HERO BUTTONS */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">5. Landing Hero Action Buttons</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-sand/10 p-3 rounded-[2px] space-y-3">
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block">Primary Action Button (Button 1)</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[9px] tracking-widest uppercase text-charcoal/50 mb-1 font-mono">Btn Text</label>
+                            <input
+                              type="text"
+                              value={heroBtn1Text}
+                              onChange={(e) => setHeroBtn1Text(e.target.value)}
+                              className="w-full bg-white border border-sand/40 p-2 text-xs text-charcoal"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] tracking-widest uppercase text-charcoal/50 mb-1 font-mono">Btn Link/Anchor</label>
+                            <input
+                              type="text"
+                              value={heroBtn1Link}
+                              onChange={(e) => setHeroBtn1Link(e.target.value)}
+                              className="w-full bg-white border border-sand/40 p-2 text-xs text-charcoal"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-sand/10 p-3 rounded-[2px] space-y-3">
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block">Secondary Action Button (Button 2)</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[9px] tracking-widest uppercase text-charcoal/50 mb-1 font-mono">Btn Text</label>
+                            <input
+                              type="text"
+                              value={heroBtn2Text}
+                              onChange={(e) => setHeroBtn2Text(e.target.value)}
+                              className="w-full bg-white border border-sand/40 p-2 text-xs text-charcoal"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] tracking-widest uppercase text-charcoal/50 mb-1 font-mono">Btn Link/Anchor</label>
+                            <input
+                              type="text"
+                              value={heroBtn2Link}
+                              onChange={(e) => setHeroBtn2Link(e.target.value)}
+                              className="w-full bg-white border border-sand/40 p-2 text-xs text-charcoal"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SOCIAL CONNECTIONS AND EMAIL TARGET */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">6. Contacts, Booking recipient Email & Social Accounts</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3 flex flex-col justify-between">
+                        <h5 className="text-[10px] font-mono font-bold uppercase tracking-wider text-clay border-b border-sand/10 pb-1">General Contact Info</h5>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Inquiries Forwarding Recipient Email</label>
+                          <input
+                            type="text"
+                            value={inquiryRecipientEmail}
+                            onChange={(e) => setInquiryRecipientEmail(e.target.value)}
+                            placeholder="Email address where website inquiries are forwarded to"
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Site Public Support Email</label>
+                          <input
+                            type="text"
+                            value={contactEmail}
+                            onChange={(e) => setContactEmail(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Contact Phone Line</label>
+                          <input
+                            type="text"
+                            value={contactPhone}
+                            onChange={(e) => setContactPhone(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Address Place Description</label>
+                          <input
+                            type="text"
+                            value={contactAddress}
+                            onChange={(e) => setContactAddress(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Operational Opening Hours</label>
+                          <input
+                            type="text"
+                            value={contactHours}
+                            onChange={(e) => setContactHours(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 border-t md:border-t-0 md:border-l border-sand/15 pt-3 md:pt-0 md:pl-4">
+                        <h5 className="text-[10px] font-mono font-bold uppercase tracking-wider text-clay border-b border-sand/10 pb-1">Social Media Accounts Links</h5>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Instagram Account URL</label>
+                          <input
+                            type="text"
+                            value={socialInstagram}
+                            onChange={(e) => setSocialInstagram(e.target.value)}
+                            placeholder="E.g. https://instagram.com/afrobaobab"
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Facebook Public URL</label>
+                          <input
+                            type="text"
+                            value={socialFacebook}
+                            onChange={(e) => setSocialFacebook(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Twitter / X Page Link</label>
+                          <input
+                            type="text"
+                            value={socialTwitter}
+                            onChange={(e) => setSocialTwitter(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">TikTok Channel Link</label>
+                          <input
+                            type="text"
+                            value={socialTiktok}
+                            onChange={(e) => setSocialTiktok(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">YouTube Channel URL</label>
+                          <input
+                            type="text"
+                            value={socialYoutube}
+                            onChange={(e) => setSocialYoutube(e.target.value)}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* FOOTER VALUES */}
                   <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
-                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">5. Footer Identity & slogan lines</h4>
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">7. Footer Identity & slogan lines</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Footer Brief Branding paragraph</label>
@@ -883,13 +1517,25 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
                         Experience Card Image URL (Optional)
                       </label>
-                      <input
-                        type="text"
-                        value={expImageUrl}
-                        onChange={(e) => setExpImageUrl(e.target.value)}
-                        placeholder="E.g. https://images.unsplash.com/photo-... or relative image URL"
-                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
-                      />
+                      <div className="flex gap-4 items-start">
+                        <div className="flex-1 space-y-1.5">
+                          <input
+                            type="text"
+                            value={expImageUrl}
+                            onChange={(e) => setExpImageUrl(e.target.value)}
+                            placeholder="E.g. https://images.unsplash.com/photo-... or relative image URL"
+                            className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                          <div className="mt-1">
+                            <FileInputButton onUploaded={setExpImageUrl} label="Upload Experience Image from Computer" />
+                          </div>
+                        </div>
+                        {expImageUrl && (
+                          <div className="w-16 h-16 bg-white border border-sand/30 rounded-[2px] overflow-hidden flex items-center justify-center shrink-0 shadow-xs relative">
+                            <img src={expImageUrl} alt="Experience Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex gap-2">
@@ -1041,13 +1687,25 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
                         Exhibition Preview Image URL (Optional)
                       </label>
-                      <input
-                        type="text"
-                        value={exhImageUrl}
-                        onChange={(e) => setExhImageUrl(e.target.value)}
-                        placeholder="E.g. https://images.unsplash.com/photo-... or relative image URL"
-                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
-                      />
+                      <div className="flex gap-4 items-start">
+                        <div className="flex-1 space-y-1.5">
+                          <input
+                            type="text"
+                            value={exhImageUrl}
+                            onChange={(e) => setExhImageUrl(e.target.value)}
+                            placeholder="E.g. https://images.unsplash.com/photo-... or relative image URL"
+                            className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                          <div className="mt-1">
+                            <FileInputButton onUploaded={setExhImageUrl} label="Upload Exhibition Image from Computer" />
+                          </div>
+                        </div>
+                        {exhImageUrl && (
+                          <div className="w-16 h-16 bg-white border border-sand/30 rounded-[2px] overflow-hidden flex items-center justify-center shrink-0 shadow-xs relative">
+                            <img src={exhImageUrl} alt="Exhibition Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex gap-2">
@@ -1240,13 +1898,25 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
                         Event Core Image Cover URL (Optional)
                       </label>
-                      <input
-                        type="text"
-                        value={evImageUrl}
-                        onChange={(e) => setEvImageUrl(e.target.value)}
-                        placeholder="E.g. https://images.unsplash.com/... (Overrides gradient card background)"
-                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
-                      />
+                      <div className="flex gap-4 items-start">
+                        <div className="flex-1 space-y-1.5">
+                          <input
+                            type="text"
+                            value={evImageUrl}
+                            onChange={(e) => setEvImageUrl(e.target.value)}
+                            placeholder="E.g. https://images.unsplash.com/... (Overrides gradient card background)"
+                            className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                          <div className="mt-1">
+                            <FileInputButton onUploaded={setEvImageUrl} label="Upload Event Image from Computer" />
+                          </div>
+                        </div>
+                        {evImageUrl && (
+                          <div className="w-16 h-16 bg-white border border-sand/30 rounded-[2px] overflow-hidden flex items-center justify-center shrink-0 shadow-xs relative">
+                            <img src={evImageUrl} alt="Event Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex gap-2 font-mono">

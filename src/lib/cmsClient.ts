@@ -1,4 +1,4 @@
-import { CmsData, Experience, Exhibition, EventItem, Booking, CmsHeader } from "../types";
+import { CmsData, Experience, Exhibition, EventItem, Booking, CmsHeader, CustomPage } from "../types";
 
 const SEED_DATA: CmsData = {
   header: {
@@ -497,6 +497,96 @@ export async function deleteCmsBooking(id: string): Promise<{ success: boolean }
 
   const db = getLocalDb();
   db.bookings = db.bookings.filter(x => x.id !== id);
+  saveLocalDb(db);
+  return { success: true };
+}
+
+// Upload Client Image handler
+export async function uploadCmsImage(name: string, base64Data: string): Promise<{ success: boolean; url?: string; error?: string }> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const res = await fetch("/api/cms/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, data: base64Data })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      const err = await res.json();
+      return { success: false, error: err.error || "Upload failed" };
+    } catch (e: any) {
+      console.warn("Upload server connection failed, falling back to local base64 simulation.", e);
+    }
+  }
+  // If offline/local, return base64 string directly so it is cached in the storage DB seamlessly!
+  return { success: true, url: base64Data };
+}
+
+// Custom Page CRUD triggers
+export async function saveCmsPage(id: string | null, pageData: Partial<CustomPage>): Promise<{ success: boolean; page: CustomPage }> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const url = id ? `/api/cms/pages/${id}` : "/api/cms/pages";
+      const method = id ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pageData)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("Server save custom page failed, executing local storage updates.", e);
+    }
+  }
+
+  const db = getLocalDb();
+  if (!db.customPages) db.customPages = [];
+
+  const cleanSlug = (pageData.slug || "new-page").toLowerCase().replace(/[^a-z0-9-_]/g, "-");
+
+  if (id) {
+    const idx = db.customPages.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      db.customPages[idx] = {
+        ...db.customPages[idx],
+        ...pageData,
+        slug: cleanSlug
+      };
+      saveLocalDb(db);
+      return { success: true, page: db.customPages[idx] };
+    }
+  }
+
+  const newPage: CustomPage = {
+    id: "page-" + Date.now(),
+    slug: cleanSlug,
+    title: pageData.title || "Untitled Page",
+    content: pageData.content || "Use our CMS dashboard to add markdown/HTML text.",
+    shownInNavbar: pageData.shownInNavbar ?? true,
+    createdAt: new Date().toISOString()
+  };
+  db.customPages.push(newPage);
+  saveLocalDb(db);
+  return { success: true, page: newPage };
+}
+
+export async function deleteCmsPage(id: string): Promise<{ success: boolean }> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const res = await fetch(`/api/cms/pages/${id}`, { method: "DELETE" });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("Server delete custom page failed, doing local", e);
+    }
+  }
+
+  const db = getLocalDb();
+  if (!db.customPages) db.customPages = [];
+  db.customPages = db.customPages.filter(p => p.id !== id);
   saveLocalDb(db);
   return { success: true };
 }

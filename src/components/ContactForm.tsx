@@ -6,9 +6,10 @@ interface ContactFormProps {
   isOpen: boolean;
   onClose: () => void;
   defaultType?: 'school' | 'corporate' | 'general';
+  recipientEmail?: string;
 }
 
-export default function ContactForm({ isOpen, onClose, defaultType = 'general' }: ContactFormProps) {
+export default function ContactForm({ isOpen, onClose, defaultType = 'general', recipientEmail }: ContactFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -81,6 +82,7 @@ export default function ContactForm({ isOpen, onClose, defaultType = 'general' }
               </h3>
               <p className="text-xs text-[#777] mt-1 leading-relaxed font-sans">
                 Tell us about your ideal day, group size, and specific requirements. We will tailor an immersive session matching your objectives.
+                {recipientEmail && <span className="block mt-1 font-mono text-[9px] text-clay/80 uppercase tracking-widest leading-none pt-1">Inquiry routed directly to: {recipientEmail}</span>}
               </p>
             </div>
 

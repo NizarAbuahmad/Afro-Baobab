@@ -146,26 +146,41 @@ const SEED_DATA: CmsData = {
 function getDb(): CmsData {
   try {
     if (!fs.existsSync(DB_PATH)) {
-      fs.writeFileSync(DB_PATH, JSON.stringify(SEED_DATA, null, 2), "utf8");
-      return SEED_DATA;
+      const initial = { ...SEED_DATA, customPages: [] };
+      fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2), "utf8");
+      return initial;
     }
     const data = fs.readFileSync(DB_PATH, "utf8");
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (!parsed.customPages) {
+      parsed.customPages = [];
+    }
+    return parsed;
   } catch (error) {
     console.error("Error reading database", error);
-    return SEED_DATA;
+    return { ...SEED_DATA, customPages: [] };
   }
 }
 
 function writeDb(data: CmsData) {
   try {
+    if (!data.customPages) {
+      data.customPages = [];
+    }
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf8");
   } catch (error) {
     console.error("Error writing database", error);
   }
 }
 
-app.use(express.json());
+const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 // API Endpoints
 app.get("/api/cms/all", (req, res) => {
@@ -178,6 +193,70 @@ app.post("/api/cms/header", (req, res) => {
   db.header = { ...db.header, ...req.body };
   writeDb(db);
   res.json({ success: true, header: db.header });
+});
+
+// Upload image endpoint
+app.post("/api/cms/upload", (req, res) => {
+  try {
+    const { name, data } = req.body;
+    if (!name || !data) {
+      return res.status(400).json({ error: "Missing file name or file data content" });
+    }
+    const cleanBase64 = data.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(cleanBase64, "base64");
+    const ext = path.extname(name) || ".jpg";
+    const filename = `img-${Date.now()}-${Math.round(Math.random() * 1000)}${ext}`;
+    const destination = path.join(UPLOADS_DIR, filename);
+    fs.writeFileSync(destination, buffer);
+    res.json({ success: true, url: `/uploads/${filename}` });
+  } catch (err: any) {
+    console.error("Upload error", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Custom Pages CRUD
+app.post("/api/cms/pages", (req, res) => {
+  const db = getDb();
+  if (!db.customPages) db.customPages = [];
+  const slug = (req.body.slug || "new-page").toLowerCase().replace(/[^a-z0-9-_]/g, "-");
+  const newPage = {
+    id: "page-" + Date.now(),
+    slug,
+    title: req.body.title || "Untitled Page",
+    content: req.body.content || "Use our CMS dashboard to add markdown/HTML text.",
+    shownInNavbar: req.body.shownInNavbar ?? true,
+    createdAt: new Date().toISOString()
+  };
+  db.customPages.push(newPage);
+  writeDb(db);
+  res.json({ success: true, page: newPage });
+});
+
+app.put("/api/cms/pages/:id", (req, res) => {
+  const db = getDb();
+  if (!db.customPages) db.customPages = [];
+  const idx = db.customPages.findIndex(p => p.id === req.params.id);
+  if (idx !== -1) {
+    const slug = (req.body.slug || db.customPages[idx].slug).toLowerCase().replace(/[^a-z0-9-_]/g, "-");
+    db.customPages[idx] = {
+      ...db.customPages[idx],
+      ...req.body,
+      slug
+    };
+    writeDb(db);
+    res.json({ success: true, page: db.customPages[idx] });
+  } else {
+    res.status(404).json({ error: "Page not found" });
+  }
+});
+
+app.delete("/api/cms/pages/:id", (req, res) => {
+  const db = getDb();
+  if (!db.customPages) db.customPages = [];
+  db.customPages = db.customPages.filter(p => p.id !== req.params.id);
+  writeDb(db);
+  res.json({ success: true });
 });
 
 // Experiences CRUD
