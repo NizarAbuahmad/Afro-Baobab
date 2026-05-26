@@ -18,6 +18,9 @@ const SEED_DATA: CmsData = {
     ],
     footerDesc: "An immersive cultural destination bringing people together through exhibitions, storytelling, creativity, movement, and shared experience.",
     footerTagline: "Experience. Connect. Belong.",
+    audioUrl: "",
+    audioTitle: "None",
+    audioAutoplay: false,
 
     // Default Brand Logo settings
     logoTextPrimary: "AFRO",
@@ -26,6 +29,7 @@ const SEED_DATA: CmsData = {
     logoMode: "default-emblem",
     logoImageUrl: "",
     logoEmblemColor: "#CB6A4A",
+    navbarLogoPosition: "left",
 
     // Default Hero background configurations
     heroWallpaperMode: "sunrise-tribal",

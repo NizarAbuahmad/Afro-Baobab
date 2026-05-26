@@ -31,7 +31,10 @@ const SEED_DATA: CmsData = {
       "Private Events"
     ],
     footerDesc: "An immersive cultural destination bringing people together through exhibitions, storytelling, creativity, movement, and shared experience.",
-    footerTagline: "Experience. Connect. Belong."
+    footerTagline: "Experience. Connect. Belong.",
+    audioUrl: "",
+    audioTitle: "None",
+    audioAutoplay: false
   },
   experiences: [
     {
@@ -195,17 +198,17 @@ app.post("/api/cms/header", (req, res) => {
   res.json({ success: true, header: db.header });
 });
 
-// Upload image endpoint
+// Upload media endpoint (supports images and audio files)
 app.post("/api/cms/upload", (req, res) => {
   try {
     const { name, data } = req.body;
     if (!name || !data) {
       return res.status(400).json({ error: "Missing file name or file data content" });
     }
-    const cleanBase64 = data.replace(/^data:image\/\w+;base64,/, "");
+    const cleanBase64 = data.replace(/^data:[^;]+;base64,/, "");
     const buffer = Buffer.from(cleanBase64, "base64");
     const ext = path.extname(name) || ".jpg";
-    const filename = `img-${Date.now()}-${Math.round(Math.random() * 1000)}${ext}`;
+    const filename = `media-${Date.now()}-${Math.round(Math.random() * 1000)}${ext}`;
     const destination = path.join(UPLOADS_DIR, filename);
     fs.writeFileSync(destination, buffer);
     res.json({ success: true, url: `/uploads/${filename}` });

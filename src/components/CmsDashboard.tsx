@@ -29,9 +29,19 @@ interface CmsDashboardProps {
   onRefresh: () => void;
 }
 
-type TabType = "general" | "experiences" | "exhibitions" | "events" | "bookings" | "pages";
+type TabType = 
+  | "branding" 
+  | "theme" 
+  | "hero_slides" 
+  | "our_story" 
+  | "experiences" 
+  | "exhibitions" 
+  | "events" 
+  | "contacts" 
+  | "bookings" 
+  | "pages";
 
-function FileInputButton({ onUploaded, label = "Upload from Computer" }: { onUploaded: (url: string) => void; label?: string }) {
+function FileInputButton({ onUploaded, label = "Upload from Computer", accept = "image/*" }: { onUploaded: (url: string) => void; label?: string; accept?: string }) {
   const [uploading, setUploading] = useState(false);
   return (
     <div className="flex items-center gap-2 mt-1.5">
@@ -39,7 +49,7 @@ function FileInputButton({ onUploaded, label = "Upload from Computer" }: { onUpl
         {uploading ? "Uploading file..." : label}
         <input
           type="file"
-          accept="image/*"
+          accept={accept}
           className="hidden"
           disabled={uploading}
           onChange={async (e) => {
@@ -82,7 +92,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [authLoading, setAuthLoading] = useState(false);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<TabType>("general");
+  const [activeTab, setActiveTab] = useState<TabType>("branding");
 
   // Edit Forms state
   const [heroTitle, setHeroTitle] = useState("");
@@ -188,6 +198,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   // Brand Logo scale dimensions
   const [navbarLogoSize, setNavbarLogoSize] = useState<number>(100);
   const [footerLogoSize, setFooterLogoSize] = useState<number>(100);
+  const [navbarLogoPosition, setNavbarLogoPosition] = useState<"left" | "center" | "right">("left");
 
   // Footer Logo Customize
   const [footerLogoMode, setFooterLogoMode] = useState<"default-emblem" | "custom-text" | "image-url" | "match-header">("match-header");
@@ -197,6 +208,20 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [heroTextAlignment, setHeroTextAlignment] = useState<"left" | "center" | "right">("left");
   const [heroTitleSize, setHeroTitleSize] = useState<number>(72);
   const [heroSubSize, setHeroSubSize] = useState<number>(18);
+
+  // Background ambient audio settings states
+  const [audioUrl, setAudioUrl] = useState("");
+  const [audioTitle, setAudioTitle] = useState("");
+  const [audioAutoplay, setAudioAutoplay] = useState(false);
+  const [hideMusicPlayer, setHideMusicPlayer] = useState(false);
+
+  // Proverb Spotlight states
+  const [hideProverbWidget, setHideProverbWidget] = useState(false);
+
+  // WhatsApp configuration states
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [whatsAppNumber, setWhatsAppNumber] = useState("");
+  const [whatsAppMessage, setWhatsAppMessage] = useState("");
 
   // Custom subpage manager states
   const [pageTitle, setPageTitle] = useState("");
@@ -322,6 +347,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
       setInquiryRecipientEmail(data.header.inquiryRecipientEmail || "inquiry@afrobaobab.com");
       setNavbarLogoSize(data.header.navbarLogoSize || 100);
       setFooterLogoSize(data.header.footerLogoSize || 100);
+      setNavbarLogoPosition(data.header.navbarLogoPosition || "left");
 
       setFooterLogoMode(data.header.footerLogoMode || "match-header");
       setFooterLogoImageUrl(data.header.footerLogoImageUrl || "");
@@ -329,6 +355,17 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
       setHeroTextAlignment(data.header.heroTextAlignment || "left");
       setHeroTitleSize(data.header.heroTitleSize || 72);
       setHeroSubSize(data.header.heroSubSize || 18);
+
+      setAudioUrl(data.header.audioUrl || "");
+      setAudioTitle(data.header.audioTitle || "None");
+      setAudioAutoplay(!!data.header.audioAutoplay);
+      setHideMusicPlayer(!!data.header.hideMusicPlayer);
+
+      setHideProverbWidget(!!data.header.hideProverbWidget);
+
+      setShowWhatsApp(!!data.header.showWhatsApp);
+      setWhatsAppNumber(data.header.whatsAppNumber || "");
+      setWhatsAppMessage(data.header.whatsAppMessage || "");
     }
   }, [data]);
 
@@ -443,6 +480,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         // Sizing Slider Values
         navbarLogoSize: Number(navbarLogoSize) || 100,
         footerLogoSize: Number(footerLogoSize) || 100,
+        navbarLogoPosition,
 
         // Custom Buttons Link-text configs
         heroBtn1Text,
@@ -465,6 +503,20 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         socialTwitter,
         socialTiktok,
         socialYoutube,
+
+        // Audio
+        audioUrl,
+        audioTitle,
+        audioAutoplay,
+        hideMusicPlayer,
+
+        // Proverb
+        hideProverbWidget,
+
+        // WhatsApp
+        showWhatsApp,
+        whatsAppNumber,
+        whatsAppMessage,
       });
       if (res.success) {
         alert("Homepage configuration saved successfully!");
@@ -609,9 +661,43 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
     }
   };
 
+  // Add/Update Custom Page
+  const handleSavePage = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await saveCmsPage(editingItemId, {
+        title: pageTitle,
+        slug: pageSlug,
+        content: pageContent,
+        shownInNavbar: pageShownInNavbar
+      });
+
+      if (res.success) {
+        setPageTitle("");
+        setPageSlug("");
+        setPageContent("");
+        setPageShownInNavbar(true);
+        setEditingItemId(null);
+        onRefresh();
+      }
+    } catch (err) {
+      alert("Failed to save custom page.");
+    }
+  };
+
+  const handleDeletePage = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this custom page?")) return;
+    try {
+      const res = await deleteCmsPage(id);
+      if (res.success) onRefresh();
+    } catch (err) {
+      alert("Failed to delete custom page.");
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/80 backdrop-blur-md p-4 overflow-y-auto">
-      <div className="relative w-full max-w-5xl bg-ivory border border-sand/50 rounded-[4px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/80 backdrop-blur-md md:p-4 overflow-y-auto">
+      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] max-w-5xl bg-ivory border-0 md:border border-sand/50 rounded-none md:rounded-[4px] shadow-2xl overflow-hidden flex flex-col">
         {/* Header bar */}
         <div className="bg-[#1f1610] text-white px-6 py-4 flex items-center justify-between border-b border-sand/20">
           <div className="flex items-center gap-3">
@@ -710,92 +796,216 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
           /* Logged In Dashboard Dashboard Workspace */
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
             {/* Sidebar navigation tabs */}
-            <div className="w-full md:w-60 bg-charcoal text-white flex flex-row md:flex-col border-b md:border-b-0 md:border-r border-sand/10 overflow-x-auto md:overflow-x-visible">
-              <button
-                onClick={() => setActiveTab("general")}
-                className={`flex-1 md:flex-none py-3.5 px-5 text-left text-xs tracking-wider uppercase font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer ${
-                  activeTab === "general"
-                    ? "bg-clay text-white shadow-inner"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <Settings className="w-4 h-4 text-sand/60" /> General Settings
-              </button>
+            <div className="w-full md:w-64 bg-[#140d08] text-white flex flex-col border-b md:border-b-0 md:border-r border-sand/10 overflow-y-auto shrink-0">
+              {/* User Profile Segment inspired by high-end school CMS */}
+              <div className="p-4 border-b border-sand/10 bg-[#1e140d]/40 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-clay flex items-center justify-center font-bold text-white shadow-md border border-sand/30 font-serif">
+                  N
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-mono font-bold text-sand tracking-wide truncate">nizar_admin@</div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                    <span className="text-[10px] text-white/50 font-sans tracking-tight">System Administrator</span>
+                  </div>
+                </div>
+              </div>
 
-              <button
-                onClick={() => {
-                  setActiveTab("experiences");
-                  setEditingItemId(null);
-                }}
-                className={`flex-1 md:flex-none py-3.5 px-5 text-left text-xs tracking-wider uppercase font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer ${
-                  activeTab === "experiences"
-                    ? "bg-clay text-white shadow-inner"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <BookOpen className="w-4 h-4 text-sand/60" /> Experiences
-              </button>
+              {/* Individual Section Tabs */}
+              <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible md:py-2 scrollbar-none">
+                {/* 1. BRANDING TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("branding");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "branding"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Globe className="w-4 h-4 text-sand/60" /> Logo & Branding
+                </button>
 
-              <button
-                onClick={() => {
-                  setActiveTab("exhibitions");
-                  setEditingItemId(null);
-                }}
-                className={`flex-1 md:flex-none py-3.5 px-5 text-left text-xs tracking-wider uppercase font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer ${
-                  activeTab === "exhibitions"
-                    ? "bg-clay text-white shadow-inner"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <HelpCircle className="w-4 h-4 text-sand/60" /> Exhibitions
-              </button>
+                {/* 2. THEME & WALLPAPER TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("theme");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "theme"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Palette className="w-4 h-4 text-sand/60" /> Theme & Wallpaper
+                </button>
 
-              <button
-                onClick={() => {
-                  setActiveTab("events");
-                  setEditingItemId(null);
-                }}
-                className={`flex-1 md:flex-none py-3.5 px-5 text-left text-xs tracking-wider uppercase font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer ${
-                  activeTab === "events"
-                    ? "bg-clay text-white shadow-inner"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <Calendar className="w-4 h-4 text-sand/60" /> Events
-              </button>
+                {/* 3. HERO SLIDES TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("hero_slides");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "hero_slides"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Type className="w-4 h-4 text-sand/60" /> Hero & Spotlight
+                </button>
 
-              <button
-                onClick={() => setActiveTab("bookings")}
-                className={`flex-1 md:flex-none py-3.5 px-5 text-left text-xs tracking-wider uppercase font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap relative cursor-pointer ${
-                  activeTab === "bookings"
-                    ? "bg-clay text-white shadow-inner"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <Bookmark className="w-4 h-4 text-sand/60" /> Inquiries
-                {data?.bookings && data.bookings.filter(b => b.status === 'unread').length > 0 && (
-                  <span className="ml-auto bg-clay text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold animate-pulse">
-                    {data.bookings.filter(b => b.status === 'unread').length}
-                  </span>
-                )}
-              </button>
+                {/* 4. OUR STORY TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("our_story");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "our_story"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-sand/60" /> Our Story
+                </button>
+
+                {/* Divider for site components */}
+                <div className="hidden md:block my-2 border-t border-sand/5"></div>
+
+                {/* 5. EXPERIENCES TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("experiences");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "experiences"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 text-sand/60" /> Experience Zones
+                </button>
+
+                {/* 6. EXHIBITIONS TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("exhibitions");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "exhibitions"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <HelpCircle className="w-4 h-4 text-sand/60" /> Exhibitions Desk
+                </button>
+
+                {/* 7. EVENTS TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("events");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "events"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Calendar className="w-4 h-4 text-sand/60" /> Events Scheduler
+                </button>
+
+                {/* 8. PAGES TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("pages");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "pages"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-sand/60" /> Custom Subpages
+                </button>
+
+                {/* Divider for communication */}
+                <div className="hidden md:block my-2 border-t border-sand/5"></div>
+
+                {/* 9. CONTACTS TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("contacts");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "contacts"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Phone className="w-4 h-4 text-sand/60" /> Contacts & WhatsApp
+                </button>
+
+                {/* 10. BOOKINGS TAB */}
+                <button
+                  onClick={() => setActiveTab("bookings")}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap relative cursor-pointer shrink-0 ${
+                    activeTab === "bookings"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4 text-sand/60" /> Guest Inquiries
+                  {data?.bookings && data.bookings.filter(b => b.status === "unread").length > 0 && (
+                    <span className="ml-auto bg-[#cb6a4a] text-white text-[10px] px-2 py-0.5 rounded-full font-mono font-bold animate-pulse">
+                      {data.bookings.filter(b => b.status === "unread").length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Quick Logout and Status line */}
+              <div className="mt-auto hidden md:block p-4 border-t border-sand/10 bg-[#1e140d]/20 text-center">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left py-2 px-3 text-white/50 hover:text-white text-xs font-mono tracking-widest uppercase flex items-center gap-2 rounded bg-red-950/20 hover:bg-red-950/40 transition-all border border-red-500/10"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Logout CMS Desk
+                </button>
+              </div>
             </div>
 
             {/* Inner Desk Content */}
             <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-warm-white">
-              {/* general */}
-              {activeTab === "general" && (
-                <div className="space-y-8 pb-10">
-                  <div className="border-b border-sand/20 pb-4">
-                    <h3 className="font-serif text-2xl text-charcoal">Design & Brand Customizer Desk</h3>
-                    <p className="text-xs text-[#777] mt-1 font-sans">
-                      Changes here update the branding, background wallpaper, interactive design palettes, and general page segments immediately.
-                    </p>
+              {/* branding */}
+              {activeTab === "branding" && (
+                <div className="space-y-6 pb-10">
+                  <div className="border-b border-sand/20 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl text-charcoal flex items-center gap-2">🌐 Logo & Branding Configuration</h3>
+                      <p className="text-xs text-[#777] mt-1 font-sans">
+                        Configure visual identity, website logos, dimensions, alignments, and branding assets.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSaveHeader}
+                      className="bg-[#cb6a4a] hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer w-fit"
+                    >
+                      Save Branding
+                    </button>
                   </div>
 
                   {/* LOGO & BRAND SECTION */}
                   <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
-                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">1. Logo & Emblem Settings</h4>
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">1. Logo, Emblem, Sizing & Positioning</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Logo Mode</label>
@@ -877,22 +1087,92 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       </div>
                     </div>
 
+                    {/* NAVBAR HEADER SIZING & POSITION CONTROLS */}
+                    <div className="border-t border-sand/15 pt-4 mt-3 space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block">Header Navbar Logo Size & Positioning</span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-sand/10 p-3 rounded-[2px] space-y-2 border border-sand/20">
+                          <div className="flex justify-between items-center text-[10px] tracking-widest uppercase text-charcoal/60 font-mono font-medium">
+                            <span>Navbar Header Logo Size</span>
+                            <span className="font-mono text-clay font-bold">{navbarLogoSize}%</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="45"
+                            max="250"
+                            step="5"
+                            value={navbarLogoSize}
+                            onChange={(e) => setNavbarLogoSize(Number(e.target.value))}
+                            className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
+                          />
+                          <span className="block text-[9px] text-[#888] leading-none">Slider adjusts the header navbar brand logo scale</span>
+                        </div>
+
+                        <div className="bg-sand/10 p-3 rounded-[2px] space-y-2 border border-sand/20 flex flex-col justify-between">
+                          <div>
+                            <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium leading-none">Header Logo Positioning</label>
+                            <span className="block text-[9px] text-[#888] mb-1.5 leading-tight">Controls structural layout of the main page header navbar</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1">
+                            {(["left", "center", "right"] as const).map((pos) => {
+                              const isActive = navbarLogoPosition === pos;
+                              return (
+                                <button
+                                  key={pos}
+                                  type="button"
+                                  onClick={() => setNavbarLogoPosition(pos)}
+                                  className={`py-1.5 px-2 border rounded-[2px] text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
+                                    isActive
+                                      ? "bg-clay text-white border-clay shadow-sm font-semibold"
+                                      : "bg-white border-sand/50 text-[#555] hover:bg-[#faf9f6]"
+                                  }`}
+                                >
+                                  {pos === "left" && "Left"}
+                                  {pos === "center" && "Center"}
+                                  {pos === "right" && "Right"}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* FOOTER SPECIFIC LOGO CONTROLS */}
                     <div className="border-t border-sand/15 pt-3 space-y-3">
                       <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block">Footer Specific Logo Configuration</span>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sand/5 p-3 rounded-[2px] border border-sand/15">
-                        <div>
-                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono">Footer Logo Mode</label>
-                          <select
-                            value={footerLogoMode}
-                            onChange={(e) => setFooterLogoMode(e.target.value as any)}
-                            className="w-full bg-white border border-sand/40 px-2 py-1.5 text-xs text-charcoal rounded-[2px]"
-                          >
-                            <option value="match-header">Same as Header Mode</option>
-                            <option value="default-emblem">Default Baobab Emblem & Text</option>
-                            <option value="custom-text">Pure Custom Typography (No Emblem)</option>
-                            <option value="image-url">Custom Logo Image (Asset URL)</option>
-                          </select>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono">Footer Logo Mode</label>
+                            <select
+                              value={footerLogoMode}
+                              onChange={(e) => setFooterLogoMode(e.target.value as any)}
+                              className="w-full bg-white border border-sand/40 px-2 py-1.5 text-xs text-charcoal rounded-[2px]"
+                            >
+                              <option value="match-header">Same as Header Mode</option>
+                              <option value="default-emblem">Default Baobab Emblem & Text</option>
+                              <option value="custom-text">Pure Custom Typography (No Emblem)</option>
+                              <option value="image-url">Custom Logo Image (Asset URL)</option>
+                            </select>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center text-[9px] tracking-widest uppercase text-charcoal/60 font-mono">
+                              <span>Footer Logo Size</span>
+                              <span className="font-mono text-clay font-bold">{footerLogoSize}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="45"
+                              max="250"
+                              step="5"
+                              value={footerLogoSize}
+                              onChange={(e) => setFooterLogoSize(Number(e.target.value))}
+                              className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
+                            />
+                            <span className="block text-[8px] text-[#888] leading-none">Slider adjusts the footer brand logo scale</span>
+                          </div>
                         </div>
                         {footerLogoMode === "image-url" ? (
                           <div className="space-y-1.5">
@@ -917,11 +1197,31 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                           </div>
                         ) : (
                           <div className="flex items-center text-[10px] text-charcoal/40 font-sans italic pt-4">
-                            Footer logo matches the header mode.
+                            Footer logo matches the header mode & size multiplier rules.
                           </div>
                         )}
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* THEME & WALLPAPER TAB */}
+              {activeTab === "theme" && (
+                <div className="space-y-6 pb-10">
+                  <div className="border-b border-sand/20 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl text-charcoal flex items-center gap-2">🎨 Themes & Style Settings</h3>
+                      <p className="text-xs text-[#777] mt-1 font-sans">
+                        Customize header styles, wallpaper configurations, color palettes, micro-elements, and decorative dividers.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSaveHeader}
+                      className="bg-[#cb6a4a] hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer w-fit"
+                    >
+                      Save Theme Settings
+                    </button>
                   </div>
 
                   {/* WALLPAPER & GRADIENT SECTION */}
@@ -989,6 +1289,121 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                           placeholder="E.g. #141d30"
                           className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
                         />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* HERO SLIDES & SPOTLIGHT TAB */}
+              {activeTab === "hero_slides" && (
+                <div className="space-y-6 pb-10">
+                  <div className="border-b border-sand/20 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl text-charcoal flex items-center gap-2">✨ Hero Slides & Spotlight Settings</h3>
+                      <p className="text-xs text-[#777] mt-1 font-sans">
+                        Update landing page headers, responsive description texts, action button labels, and background ambient audio settings.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSaveHeader}
+                      className="bg-[#cb6a4a] hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer w-fit"
+                    >
+                      Save Slide Content
+                    </button>
+                  </div>
+
+                  {/* BACKGROUND AMBIENT MUSIC SECTION */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">Background Ambient Music Settings</h4>
+                    <p className="text-[11px] text-charcoal/60 leading-relaxed font-sans">
+                      Add a background track that guests can play, pause, or mute as they browse. You can upload an audio track (.mp3, .wav, or .ogg) or provide an external stream link.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Music Track Title / Artist</label>
+                        <input
+                          type="text"
+                          value={audioTitle}
+                          onChange={(e) => setAudioTitle(e.target.value)}
+                          placeholder="e.g. Ambient Kora & Kalimba"
+                          className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Ambient Music Playback Toggles</label>
+                        <div className="space-y-2.5 pt-1.5">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="audioAutoplay"
+                              checked={audioAutoplay}
+                              onChange={(e) => setAudioAutoplay(e.target.checked)}
+                              className="w-4 h-4 text-clay focus:ring-clay border-sand/50 rounded-[2px] cursor-pointer"
+                            />
+                            <label htmlFor="audioAutoplay" className="text-xs text-charcoal/80 cursor-pointer font-sans select-none leading-none">
+                              Autoplay on guest's first interaction
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="hideMusicPlayer"
+                              checked={hideMusicPlayer}
+                              onChange={(e) => setHideMusicPlayer(e.target.checked)}
+                              className="w-4 h-4 text-clay focus:ring-clay border-sand/50 rounded-[2px] cursor-pointer"
+                            />
+                            <label htmlFor="hideMusicPlayer" className="text-xs text-red-600 font-bold cursor-pointer font-sans select-none leading-none">
+                              Hide Ambient Music Player (Keep Website Silent)
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Audio URL or Upload Path (MP3/WAV)</label>
+                      <div className="flex gap-4 items-start">
+                        <div className="flex-grow space-y-1.5">
+                          <input
+                            type="text"
+                            value={audioUrl}
+                            onChange={(e) => setAudioUrl(e.target.value)}
+                            placeholder="Paste external .mp3 link, or upload an audio file below"
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                          <div className="flex items-center gap-3">
+                            <FileInputButton
+                              accept="audio/*"
+                              onUploaded={(url) => {
+                                setAudioUrl(url);
+                                if (!audioTitle || audioTitle === "None" || audioTitle === "") {
+                                  setAudioTitle("Uploaded Custom Ambient");
+                                }
+                              }}
+                              label="Upload Background Audio File"
+                            />
+                            {audioUrl && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAudioUrl("");
+                                  setAudioTitle("");
+                                }}
+                                className="text-[10px] text-red-500 font-mono hover:underline uppercase tracking-wide cursor-pointer"
+                              >
+                                Clear Audio
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {audioUrl && (
+                          <div className="bg-sand/15 px-3 py-2 rounded-[2px] border border-sand/30 text-[10px] font-mono shrink-0 flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            Audio Loaded
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1075,7 +1490,44 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                           className="w-full bg-ivory/35 border border-sand/50 px-3 py-2.5 text-xs text-charcoal rounded-[2px]"
                         />
                       </div>
+
+                      {/* PROVERB SPOTLIGHT VISIBILITY TOGGLE */}
+                      <div className="border-t border-sand/15 pt-4">
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block mb-2">Proverb Daily Spotlight Widget</span>
+                        <div className="flex items-center space-x-2 bg-sand/10 p-3 rounded-[2px] border border-sand/15">
+                          <input
+                            type="checkbox"
+                            id="hideProverbWidget"
+                            checked={hideProverbWidget}
+                            onChange={(e) => setHideProverbWidget(e.target.checked)}
+                            className="w-4 h-4 text-clay focus:ring-clay border-sand/50 rounded-[2px] cursor-pointer"
+                          />
+                          <label htmlFor="hideProverbWidget" className="text-xs text-charcoal/80 cursor-pointer font-sans select-none leading-none">
+                            <strong>Hide "Proverb of the Day" Box</strong> (Hides the wisdom widget inside the landing hero)
+                          </label>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* OUR STORY TAB */}
+              {activeTab === "our_story" && (
+                <div className="space-y-6 pb-10">
+                  <div className="border-b border-sand/20 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl text-charcoal flex items-center gap-2">📖 Story Segment Settings</h3>
+                      <p className="text-xs text-[#777] mt-1 font-sans">
+                        Customize the primary origin story, custom headings, welcome paragraphs, values, and introductory segments.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSaveHeader}
+                      className="bg-[#cb6a4a] hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer w-fit"
+                    >
+                      Save Story
+                    </button>
                   </div>
 
                   {/* ABOUT / OUR STORY SECTION */}
@@ -1319,8 +1771,12 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         </div>
                       )}
                     </div>
+                  </div>
+                </div>
+              )}
 
-                    {/* EXPERIENCES / WHAT WE OFFER CONTROL */}
+                  {/* EXPERIENCES / WHAT WE OFFER CONTROL */}
+                  {activeTab === "experiences" && (
                     <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
                       <div className="flex items-center justify-between border-b border-sand/10 pb-2">
                         <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">C. "What We Offer" (Experiences)</span>
@@ -1371,8 +1827,10 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {/* EXHIBITIONS CONTROL */}
+                  {/* EXHIBITIONS CONTROL */}
+                  {activeTab === "exhibitions" && (
                     <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
                       <div className="flex items-center justify-between border-b border-sand/10 pb-2">
                         <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">D. "Exhibitions" Section</span>
@@ -1422,8 +1880,10 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {/* SCHOOLS CONTROL */}
+                  {/* SCHOOLS CONTROL */}
+                  {activeTab === "our_story" && (
                     <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
                       <div className="flex items-center justify-between border-b border-sand/10 pb-2">
                         <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">E. "Designed for Curious Minds" (Schools & Organizations)</span>
@@ -1473,8 +1933,10 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {/* EVENTS CONTROL */}
+                  {/* EVENTS CONTROL */}
+                  {activeTab === "events" && (
                     <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
                       <div className="flex items-center justify-between border-b border-sand/10 pb-2">
                         <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">F. "What's On" (Events Calendar Hub)</span>
@@ -1525,10 +1987,11 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         </div>
                       )}
                     </div>
-                  </div>
+                  )}
 
                   {/* CENTRAL PALETTE & INTERACTION DESK */}
-                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                  {activeTab === "theme" && (
+                    <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
                     <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">3. Design Color Palette & Custom Typography</h4>
                     
                     <p className="text-[11px] text-charcoal/60 leading-relaxed font-sans mb-2">
@@ -1646,49 +2109,12 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       </div>
                     </div>
                   </div>
-
-                  {/* LOGO SIZING RANGE SLIDERS */}
-                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
-                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">4. Logo Size & Sizing Controls</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="bg-sand/10 p-3 rounded-[2px] space-y-2 border border-sand/20">
-                        <div className="flex justify-between items-center text-[10px] tracking-widest uppercase text-charcoal/60 font-mono font-medium">
-                          <span>Navbar Header Logo Size</span>
-                          <span className="font-mono text-clay font-bold">{navbarLogoSize}%</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="45"
-                          max="250"
-                          step="5"
-                          value={navbarLogoSize}
-                          onChange={(e) => setNavbarLogoSize(Number(e.target.value))}
-                          className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
-                        />
-                        <span className="block text-[9px] text-[#888] leading-none">Slider adjusts the header navbar brand logo scale</span>
-                      </div>
-                      <div className="bg-sand/10 p-3 rounded-[2px] space-y-2 border border-sand/20">
-                        <div className="flex justify-between items-center text-[10px] tracking-widest uppercase text-charcoal/60 font-mono font-medium">
-                          <span>Footer Logo Size</span>
-                          <span className="font-mono text-clay font-bold">{footerLogoSize}%</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="45"
-                          max="250"
-                          step="5"
-                          value={footerLogoSize}
-                          onChange={(e) => setFooterLogoSize(Number(e.target.value))}
-                          className="w-full accent-clay cursor-pointer h-1.5 bg-sand/30 rounded"
-                        />
-                        <span className="block text-[9px] text-[#888] leading-none">Slider adjusts the footer brand logo scale</span>
-                      </div>
-                    </div>
-                  </div>
+                )}
 
                   {/* ACTION HERO HERO BUTTONS */}
-                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
-                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">5. Landing Hero Action Buttons</h4>
+                  {activeTab === "hero_slides" && (
+                    <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">4. Landing Hero Action Buttons</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-sand/10 p-3 rounded-[2px] space-y-3">
                         <span className="text-[10px] font-mono font-bold tracking-wider text-clay uppercase block">Primary Action Button (Button 1)</span>
@@ -1738,10 +2164,29 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                       </div>
                     </div>
                   </div>
+                )}
 
-                  {/* SOCIAL CONNECTIONS AND EMAIL TARGET */}
-                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
-                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">6. Contacts, Booking recipient Email & Social Accounts</h4>
+                  {/* CONTACTS TAB */}
+                  {activeTab === "contacts" && (
+                    <div className="space-y-6 pb-10">
+                      <div className="border-b border-sand/20 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <h3 className="font-serif text-2xl text-charcoal flex items-center gap-2">📞 Contact & Integration Desk</h3>
+                          <p className="text-xs text-[#777] mt-1 font-sans">
+                            Manage phone numbers, emails, reservation configurations, social media connections, and WhatsApp direct messaging.
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleSaveHeader}
+                          className="bg-[#cb6a4a] hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer w-fit"
+                        >
+                          Save Contacts
+                        </button>
+                      </div>
+
+                      {/* SOCIAL CONNECTIONS AND EMAIL TARGET */}
+                      <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">5. Contacts, Booking recipient Email & Social Accounts</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3 flex flex-col justify-between">
@@ -1844,11 +2289,57 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         </div>
                       </div>
                     </div>
+
+                    {/* WHATSAPP CUSTOM FLOATING BUTTON CONFIGURATION */}
+                    <div className="border-t border-sand/15 pt-4 mt-2">
+                      <h5 className="text-[10px] font-mono font-bold uppercase tracking-wider text-clay mb-2">WhatsApp Instant Chat Float Toggle & Setup</h5>
+                      <div className="bg-[#25D366]/5 border border-[#25D366]/20 p-4 rounded-[2px] space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="showWhatsApp"
+                            checked={showWhatsApp}
+                            onChange={(e) => setShowWhatsApp(e.target.checked)}
+                            className="w-4 h-4 text-clay focus:ring-clay border-sand/50 rounded-[2px] cursor-pointer"
+                          />
+                          <label htmlFor="showWhatsApp" className="text-xs text-charcoal/80 font-bold cursor-pointer font-sans select-none">
+                            Enable Floating WhatsApp Help / Contact Button
+                          </label>
+                        </div>
+
+                        {showWhatsApp && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">WhatsApp Phone Number (with Country Code)</label>
+                              <input
+                                type="text"
+                                value={whatsAppNumber}
+                                onChange={(e) => setWhatsAppNumber(e.target.value)}
+                                placeholder="E.g. +971501234567"
+                                className="w-full bg-white border border-sand/40 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                              <p className="text-[9px] text-charcoal/50 font-sans mt-1">Include country code without special characters or spaces where possible.</p>
+                            </div>
+                            <div>
+                              <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Default Message Draft (Optional)</label>
+                              <input
+                                type="text"
+                                value={whatsAppMessage}
+                                onChange={(e) => setWhatsAppMessage(e.target.value)}
+                                placeholder="E.g. Hi Afro Baobab! I would like to book an experience..."
+                                className="w-full bg-white border border-sand/40 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                              <p className="text-[9px] text-charcoal/50 font-sans mt-1">Preset message populated automatic-wise in user's WhatsApp input box.</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* FOOTER VALUES */}
                   <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-4 shadow-sm">
-                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">7. Footer Identity & slogan lines</h4>
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">6. Footer Identity & slogan lines</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Footer Brief Branding paragraph</label>

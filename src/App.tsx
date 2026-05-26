@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Sparkles, Calendar, BookOpen, Clock, Heart, Users, ArrowUpRight, CheckCircle2, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Sparkles, Calendar, BookOpen, Clock, Heart, Users, ArrowUpRight, CheckCircle2, X, Music, Volume2, VolumeX, Play, Pause, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CmsData, Exhibition, CustomPage } from "./types";
 import Navbar from "./components/Navbar";
@@ -26,9 +26,56 @@ const TribalDivider = ({ light = false }: { light?: boolean }) => (
   </div>
 );
 
+const PROVERBS = [
+  {
+    quote: "Rain beats a leopard's skin, but it does not wash out the spots.",
+    meaning: "Your true heritage and values remain resilient through all storms of life.",
+    origin: "Asante Traditional Wisdom",
+    tag: "Resilience"
+  },
+  {
+    quote: "If you want to go fast, go alone. If you want to go far, go together.",
+    meaning: "Collaborative rhythm and shared heritage create enduring, grand journeys.",
+    origin: "East African Saying",
+    tag: "Unity"
+  },
+  {
+    quote: "It is not wrong to go back for that which you have forgotten.",
+    meaning: "Sankofa philosophy: True progress comes from honoring and learning from history.",
+    origin: "Akan Adinkra Philosophy",
+    tag: "Wisdom"
+  },
+  {
+    quote: "A giant Baobab tree grows from a tiny, fragile seed.",
+    meaning: "Patience and small incremental creations lead to magnificent community spaces.",
+    origin: "Traditional Sahelian Proverb",
+    tag: "Patience"
+  },
+  {
+    quote: "Earth is a beehive; we all enter through the same entrance.",
+    meaning: "Deep hospitality and open doors bind all human cultures together.",
+    origin: "Bantu Proverb",
+    tag: "Hospitality"
+  }
+];
+
 export default function App() {
   const [data, setData] = useState<CmsData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Proverb Spotlight state
+  const [proverbIndex, setProverbIndex] = useState(0);
+
+  // Background Audio states & ref
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(0.45);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+
+  // Guest visitor interactive hides (stored in component state, remembers visitor preference)
+  const [isProverbHiddenByVisitor, setIsProverbHiddenByVisitor] = useState(false);
+  const [isMusicPlayerHiddenByVisitor, setIsMusicPlayerHiddenByVisitor] = useState(false);
 
   // Modals state
   const [isCmsOpen, setIsCmsOpen] = useState(false);
@@ -61,6 +108,72 @@ export default function App() {
   useEffect(() => {
     fetchCmsData();
   }, []);
+
+  // Sync background audio settings with actual HTML Audio element
+  useEffect(() => {
+    if (!data?.header?.audioUrl || data?.header?.hideMusicPlayer || isMusicPlayerHiddenByVisitor) {
+      setIsAudioPlaying(false);
+      try {
+        audioRef.current?.pause();
+      } catch (e) {
+        console.warn(e);
+      }
+      return;
+    }
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Load track
+    audio.src = data.header.audioUrl;
+    audio.load();
+    audio.volume = audioVolume;
+    audio.muted = isAudioMuted;
+
+    const playAudioOnGesture = () => {
+      audio.play()
+        .then(() => {
+          setIsAudioPlaying(true);
+          setHasUserInteracted(true);
+          window.removeEventListener("click", playAudioOnGesture);
+          window.removeEventListener("touchstart", playAudioOnGesture);
+        })
+        .catch((err) => {
+          console.warn("Audio play gesture request was unsuccessful:", err);
+        });
+    };
+
+    if (data.header.audioAutoplay) {
+      // Autoplay attempt
+      audio.play()
+        .then(() => {
+          setIsAudioPlaying(true);
+          setHasUserInteracted(true);
+        })
+        .catch(() => {
+          // Setup micro-listener wait for user's interaction click anywhere
+          window.addEventListener("click", playAudioOnGesture);
+          window.addEventListener("touchstart", playAudioOnGesture);
+        });
+    }
+
+    return () => {
+      window.removeEventListener("click", playAudioOnGesture);
+      window.removeEventListener("touchstart", playAudioOnGesture);
+    };
+  }, [data?.header?.audioUrl, data?.header?.audioAutoplay, isMusicPlayerHiddenByVisitor]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = audioVolume;
+    }
+  }, [audioVolume]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isAudioMuted;
+    }
+  }, [isAudioMuted]);
 
   const handleRefresh = () => {
     setIsAdmin(!!localStorage.getItem("afro_baobab_cms_session"));
@@ -163,6 +276,15 @@ export default function App() {
             font-size: ${data?.header.heroSubSize ? `${Math.max(12, Math.round(data.header.heroSubSize * 0.85))}px` : '14px'} !important;
           }
         }
+
+        @keyframes bounceEqualizer {
+          0% { height: 3px; }
+          100% { height: 16px; }
+        }
+        .anim-eq-1 { animation: bounceEqualizer 0.5s ease-in-out infinite alternate; }
+        .anim-eq-2 { animation: bounceEqualizer 0.8s ease-in-out infinite alternate 0.15s; }
+        .anim-eq-3 { animation: bounceEqualizer 0.6s ease-in-out infinite alternate 0.3s; }
+        .anim-eq-4 { animation: bounceEqualizer 0.7s ease-in-out infinite alternate 0.05s; }
       ` }} />
 
       {/* Dynamic Navbar */}
@@ -379,6 +501,64 @@ export default function App() {
                       </>
                     )}
                   </motion.div>
+
+                  {/* PROVERB SPOTLIGHT CARD */}
+                  {!data?.header?.hideProverbWidget && (
+                    !isProverbHiddenByVisitor ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.9, delay: 0.45 }}
+                        className="border border-sand/20 bg-[#120b06]/65 backdrop-blur-md rounded-[3px] p-5 max-w-lg w-full text-left shadow-2xl space-y-3 relative group/proverb"
+                      >
+                        <div className="flex justify-between items-center border-b border-sand/10 pb-2">
+                          <span className="text-[9px] tracking-[0.25em] font-mono text-clay font-bold uppercase flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-clay animate-pulse" /> Proverb of the Day
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setProverbIndex((prev) => (prev + 1) % PROVERBS.length)}
+                              className="text-[9px] tracking-widest text-[#CB6A4A] hover:text-white font-mono uppercase bg-[#CB6A4A]/10 hover:bg-[#CB6A4A] px-2 py-0.5 rounded-[2px] cursor-pointer transition-all border-0 font-bold"
+                              title="Read another ancient African wisdom proverb"
+                            >
+                              Cycle Wisdom ✦
+                            </button>
+                            <button
+                              onClick={() => setIsProverbHiddenByVisitor(true)}
+                              className="text-[9.5px] tracking-widest text-white/40 hover:text-[#CB6A4A] font-mono uppercase hover:bg-white/5 px-2 py-0.5 rounded-[2px] cursor-pointer transition-all border-0 font-medium"
+                              title="Hide Proverb of the Day"
+                            >
+                              ✕ Hide
+                            </button>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[13px] font-serif text-white italic leading-relaxed">
+                            "{PROVERBS[proverbIndex].quote}"
+                          </p>
+                          <p className="text-[11px] text-white/65 font-sans leading-relaxed">
+                            <strong className="text-clay/90 font-mono text-[9px] uppercase tracking-wider block mt-1">Cosmic Philosophy:</strong>
+                            {PROVERBS[proverbIndex].meaning}
+                          </p>
+                        </div>
+                        <div className="flex justify-between items-center pt-1 border-t border-sand/5">
+                          <span className="text-[10px] text-white/40 font-mono">
+                            — {PROVERBS[proverbIndex].origin}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        onClick={() => setIsProverbHiddenByVisitor(false)}
+                        className="text-[10px] tracking-[0.18em] text-sand/60 hover:text-white font-mono uppercase bg-[#120b06]/40 hover:bg-[#120b06]/85 border border-sand/20 hover:border-clay/50 px-4 py-2.5 rounded-[3px] cursor-pointer transition-all flex items-center gap-2"
+                        title="Show Proverb of the Day"
+                      >
+                        <Sparkles className="w-3 h-3 text-clay animate-pulse" /> Show Wisdom Spotlight
+                      </motion.button>
+                    )
+                  )}
                 </div>
               );
             })()}
@@ -1005,6 +1185,140 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* BACKGROUND MUSIC DYNAMIC FLOATING WIDGET */}
+      {data?.header?.audioUrl && !data?.header?.hideMusicPlayer && (
+        !isMusicPlayerHiddenByVisitor ? (
+          <div 
+            className="fixed bottom-6 left-6 md:left-8 z-45 bg-[#120b06]/95 border border-sand/30 shadow-2xl pl-3 pr-4 py-2.5 rounded-full flex items-center gap-3 backdrop-blur-md transition-all duration-300 select-none hover:border-clay group"
+            id="ambient-music-floating-capsule"
+          >
+            {/* <audio> element definition */}
+            <audio ref={audioRef} loop className="hidden" />
+
+            {/* Equalizer animation and Play/Pause trigger */}
+            <button
+              onClick={() => {
+                const audio = audioRef.current;
+                if (!audio) return;
+                if (isAudioPlaying) {
+                  audio.pause();
+                  setIsAudioPlaying(false);
+                } else {
+                  audio.play()
+                    .then(() => setIsAudioPlaying(true))
+                    .catch(() => alert("Click page first to allow music playback."));
+                }
+              }}
+              className="w-10 h-10 rounded-full bg-clay hover:bg-clay/90 text-white flex items-center justify-center cursor-pointer transition-all shrink-0 hover:scale-[1.05] relative shadow-md shadow-clay/20 border-0"
+              title={isAudioPlaying ? "Pause ambient sound" : "Play ambient sound"}
+            >
+              {isAudioPlaying ? (
+                <div className="flex items-end justify-center gap-[2.5px] w-4 h-4 overflow-hidden">
+                  <span className="w-[2.5px] bg-white rounded-full anim-eq-1"></span>
+                  <span className="w-[2.5px] bg-white rounded-full anim-eq-2"></span>
+                  <span className="w-[2.5px] bg-white rounded-full anim-eq-3"></span>
+                  <span className="w-[2.5px] bg-white rounded-full anim-eq-4"></span>
+                </div>
+              ) : (
+                <Play className="w-4 h-4 fill-white text-white ml-0.5" />
+              )}
+            </button>
+
+            {/* Title and sliders */}
+            <div className="flex flex-col min-w-[100px] max-w-[130px] sm:max-w-[160px] overflow-hidden">
+              <span className="text-[9px] tracking-wider uppercase font-mono font-bold text-clay/90 block">
+                Ambient Audio
+              </span>
+              <span className="text-[11px] font-sans text-white/90 truncate font-medium block leading-tight" title={data.header.audioTitle}>
+                {data.header.audioTitle || "Tribal Rhythm"}
+              </span>
+            </div>
+
+            <div className="h-6 w-[1px] bg-sand/15 shrink-0" />
+
+            {/* Mute/Volume action slider container */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setIsAudioMuted(!isAudioMuted);
+                }}
+                className="text-white/60 hover:text-clay p-1 cursor-pointer transition-colors shrink-0 bg-transparent border-0"
+                title={isAudioMuted ? "Unmute" : "Mute"}
+              >
+                {isAudioMuted || audioVolume === 0 ? (
+                  <VolumeX className="w-4 h-4 text-clay" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+              </button>
+
+              {/* Slider with state sync */}
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={isAudioMuted ? 0 : audioVolume}
+                onChange={(e) => {
+                  const vol = parseFloat(e.target.value);
+                  setAudioVolume(vol);
+                  if (vol > 0 && isAudioMuted) {
+                    setIsAudioMuted(false);
+                  }
+                }}
+                className="w-12 sm:w-16 h-[3px] accent-clay bg-white/20 rounded-lg cursor-pointer h-1 outline-none transition-all group-hover:w-16 sm:group-hover:w-20"
+                style={{ background: `linear-gradient(to right, #CB6A4A 0%, #CB6A4A ${isAudioMuted ? 0 : audioVolume * 100}%, rgba(255,255,255,0.2) ${isAudioMuted ? 0 : audioVolume * 100}%, rgba(255,255,255,0.2) 100%)` }}
+                title={`Volume: ${Math.round((isAudioMuted ? 0 : audioVolume) * 100)}%`}
+              />
+            </div>
+
+            <div className="h-6 w-[1px] bg-sand/15 shrink-0" />
+
+            {/* Interactive Close handle */}
+            <button
+              onClick={() => {
+                setIsMusicPlayerHiddenByVisitor(true);
+                try {
+                  setIsAudioPlaying(false);
+                  audioRef.current?.pause();
+                } catch (e) {
+                  console.warn(e);
+                }
+              }}
+              className="text-white/40 hover:text-[#CB6A4A] hover:bg-white/10 p-1.5 rounded-full cursor-pointer transition-colors border-0 shrink-0"
+              title="Hide Music Player"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsMusicPlayerHiddenByVisitor(false)}
+            className="fixed bottom-6 left-6 md:left-8 z-45 bg-[#120b06]/95 border border-sand/30 shadow-2xl p-3 rounded-full flex items-center justify-center text-clay hover:text-white hover:border-clay cursor-pointer transition-all duration-300 hover:scale-105"
+            title="Restore Music Player"
+          >
+            <Music className="w-4 h-4 text-clay animate-pulse" />
+          </button>
+        )
+      )}
+
+      {/* FLOATING WHATSAPP CHAT BUTTON */}
+      {data?.header?.showWhatsApp && data?.header?.whatsAppNumber && (
+        <a
+          href={`https://wa.me/${data.header.whatsAppNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(data.header.whatsAppMessage || "Hello! I am getting in touch from the Afro Baobab Hub website.")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 md:right-8 z-45 bg-[#25D366] hover:bg-[#20BA56] text-white shadow-[0_4px_30px_rgba(37,211,102,0.35)] px-4 py-2.5 rounded-full flex items-center gap-2 backdrop-blur-md transition-all duration-300 select-none hover:scale-105 active:scale-95 group border border-white/10"
+          id="whatsapp-chat-floating-button"
+          title="Chat on WhatsApp"
+        >
+          <MessageCircle className="w-5 h-5" />
+          <span className="text-xs font-sans font-semibold tracking-wide text-white">
+            WhatsApp Chat
+          </span>
+        </a>
+      )}
     </div>
   );
 }

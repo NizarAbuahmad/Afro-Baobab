@@ -28,6 +28,7 @@ export default function HeritageMotifs({
   const [selectedId, setSelectedId] = useState("sankofa");
   const [stampColor, setStampColor] = useState("#CB6A4A"); // clay/orange
   const [patternDensity, setPatternDensity] = useState<"sparse" | "medium" | "dense">("medium");
+  const [compositionStyle, setCompositionStyle] = useState<"solo" | "checker" | "tapestry">("solo");
 
   const colors = [
     { value: "#CB6A4A", name: "Ochre Clay" },
@@ -259,6 +260,38 @@ export default function HeritageMotifs({
                   })}
                 </div>
               </div>
+
+              {/* Composition Style Swapper */}
+              <div className="space-y-2 pt-2 border-t border-sand/10">
+                <span className={`text-[10px] tracking-widest font-mono font-semibold uppercase block ${isDark ? "text-white/50" : "text-charcoal/50"}`}>Weaving Layout Style</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { style: "solo", label: "Solo" },
+                    { style: "checker", label: "Alternating" },
+                    { style: "tapestry", label: "Tapestry" }
+                  ].map((item) => {
+                    const isActive = compositionStyle === item.style;
+                    return (
+                      <button
+                        key={item.style}
+                        onClick={() => setCompositionStyle(item.style as any)}
+                        className={`py-1.5 px-2.5 rounded-[2px] text-[10px] font-mono border transition-all cursor-pointer ${
+                          isActive
+                            ? isDark
+                              ? "bg-clay text-white border-clay"
+                              : "bg-charcoal text-white border-charcoal"
+                            : isDark
+                              ? "bg-white/5 border-sand/10 text-white/50 hover:bg-white/10"
+                              : "bg-white border-sand/30 text-charcoal/60 hover:bg-neutral-50"
+                        }`}
+                        title={`${item.label} styling setup`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -323,22 +356,33 @@ export default function HeritageMotifs({
 
               {/* The Live Motif Tiles grid */}
               <div className="grid grid-cols-3 sm:grid-cols-3 gap-4 h-full items-center justify-center p-2">
-                {Array.from({ length: getGridSize() }).map((_, index) => (
-                  <motion.div
-                    key={`${selectedId}-${index}-${stampColor}`}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      duration: 0.4,
-                      delay: (index % 6) * 0.05
-                    }}
-                    className={`aspect-square w-full h-full flex items-center justify-center p-2.5 rounded-[2px] transition-shadow ${
-                      isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-neutral-50/50 hover:bg-white hover:shadow-xs'
-                    }`}
-                  >
-                    {activeMotif.svg(stampColor)}
-                  </motion.div>
-                ))}
+                {Array.from({ length: getGridSize() }).map((_, index) => {
+                  let motifToRender = activeMotif;
+                  if (compositionStyle === "checker") {
+                    const activeIdx = motifs.findIndex(m => m.id === selectedId);
+                    const motifIdx = index % 2 === 0 ? activeIdx : (activeIdx + 1) % motifs.length;
+                    motifToRender = motifs[motifIdx];
+                  } else if (compositionStyle === "tapestry") {
+                    motifToRender = motifs[index % motifs.length];
+                  }
+
+                  return (
+                    <motion.div
+                      key={`${selectedId}-${index}-${stampColor}-${compositionStyle}`}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: (index % 6) * 0.05
+                      }}
+                      className={`aspect-square w-full h-full flex items-center justify-center p-2.5 rounded-[2px] transition-shadow ${
+                        isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-neutral-50/50 hover:bg-white hover:shadow-xs'
+                      }`}
+                    >
+                      {motifToRender.svg(stampColor)}
+                    </motion.div>
+                  );
+                })}
               </div>
 
               {/* Info ribbon at bottom of grid */}
@@ -346,8 +390,10 @@ export default function HeritageMotifs({
                 <span className={`text-[9px] tracking-widest uppercase font-mono font-bold block ${isDark ? 'text-white/55' : 'text-charcoal/40'}`}>
                   DIGITAL TEXTILE SHUTTLE
                 </span>
-                <span className="text-[8px] tracking-wide font-mono text-clay block mt-0.5">
-                  STAMP: {activeMotif.name.toUpperCase()} (DENSITY: {patternDensity.toUpperCase()})
+                <span className="text-[8px] tracking-wide font-mono text-clay block mt-0.5 uppercase">
+                  {compositionStyle === "solo" && `STAMP: ${activeMotif.name} (${patternDensity})`}
+                  {compositionStyle === "checker" && `Alternating Weave Loom (${patternDensity})`}
+                  {compositionStyle === "tapestry" && `Tapestry Core Cycle (${patternDensity})`}
                 </span>
               </div>
             </div>

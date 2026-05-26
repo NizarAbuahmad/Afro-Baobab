@@ -107,9 +107,24 @@ export interface CmsHeader {
   // --- Inquiry Booking Notification Target Email ---
   inquiryRecipientEmail?: string;
 
-  // --- Brand Logo Sizes ---
+  // --- Brand Logo Sizes & Placement ---
   navbarLogoSize?: number; // scale multiplier, default 100 (%)
   footerLogoSize?: number; // scale multiplier, default 100 (%)
+  navbarLogoPosition?: "left" | "center" | "right"; // placement style
+
+  // --- Background Audio Customization ---
+  audioUrl?: string;             // Music URL or uploaded media file path
+  audioTitle?: string;           // Display name for the player
+  audioAutoplay?: boolean;       // Set auto-playing state
+  hideMusicPlayer?: boolean;     // Option to hide background music
+
+  // --- Proverb Spotlight Customization ---
+  hideProverbWidget?: boolean;   // Option to hide the proverb of the day card
+
+  // --- WhatsApp Float Support ---
+  showWhatsApp?: boolean;        // Toggle floating WhatsApp contact button
+  whatsAppNumber?: string;       // Phone number (e.g. "+971501234567")
+  whatsAppMessage?: string;      // Optional default pre-filled message
 }
 
 export interface CustomPage {

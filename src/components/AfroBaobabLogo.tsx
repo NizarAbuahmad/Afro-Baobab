@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, CSSProperties } from "react";
 
 interface LogoProps {
   className?: string;
@@ -13,6 +13,7 @@ interface LogoProps {
   logoImageUrl?: string;
   logoEmblemColor?: string;
   scalePercent?: number;
+  logoPosition?: "left" | "center" | "right";
 }
 
 export default function AfroBaobabLogo({
@@ -27,7 +28,8 @@ export default function AfroBaobabLogo({
   logoMode = "default-emblem",
   logoImageUrl = "",
   logoEmblemColor = "#CB6A4A",
-  scalePercent
+  scalePercent,
+  logoPosition = "left"
 }: LogoProps) {
   const activeColor = logoEmblemColor || color;
   const primaryText = (logoTextPrimary !== undefined && logoTextPrimary !== null) ? logoTextPrimary : "AFRO";
@@ -39,13 +41,14 @@ export default function AfroBaobabLogo({
   const isDefaultSecondary = secondaryText.toUpperCase() === "BAOBAB";
 
   // Beautifully and precisely rendered SVG path reproducing the custom human-baobab emblem
-  const renderEmblem = (sizeClass: string) => {
+  const renderEmblem = (sizeClass: string, extraStyle?: CSSProperties) => {
     if (mode === "image-url" && logoImageUrl) {
       return (
         <img
           src={logoImageUrl}
           alt="Afro Baobab Brand Logo"
           className={`${sizeClass} ${iconClassName} object-contain shrink-0`}
+          style={extraStyle}
           referrerPolicy="no-referrer"
           onError={(e) => {
             // Fallback back to emblem on error
@@ -62,7 +65,8 @@ export default function AfroBaobabLogo({
     return (
       <svg
         viewBox="0 0 200 200"
-        className={`${sizeClass} ${iconClassName} shrink-0 transition-transform duration-300`}
+        className={`${sizeClass} ${iconClassName} shrink-0 transition-all duration-300`}
+        style={extraStyle}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -239,19 +243,54 @@ export default function AfroBaobabLogo({
     const showEmblem = mode !== "custom-text";
     const showText = mode !== "image-url";
     const hasText = primaryText || secondaryText || subText;
+    const ratio = scalePercent ? scalePercent / 100 : 1;
+    const origin = logoPosition === "center" ? "center center" : logoPosition === "right" ? "right center" : "left center";
+
+    const scaleStyle = {
+      "--logo-scale-desktop": `${ratio}`,
+      "--logo-scale-mobile": `${Math.min(0.82, ratio * 0.76)}`,
+      "--logo-font-size-desktop": `${Math.round(15 * ratio)}px`,
+      "--logo-font-size-mobile": `${Math.round(11 * Math.min(0.85, ratio * 0.75))}px`,
+      transform: `scale(var(--logo-scale, ${ratio}))`,
+      transformOrigin: origin,
+      display: "inline-flex"
+    } as CSSProperties;
+
     return (
       <div 
-        className={`flex items-center gap-3.5 ${className}`}
-        style={scalePercent ? { transform: `scale(${scalePercent / 100})`, transformOrigin: "left center" } : undefined}
+        className={`logo-scaling flex items-center gap-1.5 sm:gap-3.5 ${className}`}
+        style={scalePercent ? scaleStyle : undefined}
       >
-        {showEmblem && renderEmblem("h-11 sm:h-13 w-auto")}
+        <style dangerouslySetInnerHTML={{__html: `
+          @media (max-width: 640px) {
+            .logo-scaling {
+              transform: scale(var(--logo-scale-mobile, 0.82)) !important;
+              transform-origin: ${origin} !important;
+              --logo-font-size: var(--logo-font-size-mobile, 11px) !important;
+            }
+          }
+          @media (min-width: 641px) {
+            .logo-scaling {
+              transform: scale(var(--logo-scale-desktop, 1)) !important;
+              transform-origin: ${origin} !important;
+              --logo-font-size: var(--logo-font-size-desktop, 15px) !important;
+            }
+          }
+        `}} />
+        {showEmblem && renderEmblem("h-9 sm:h-13 w-auto", scalePercent ? { height: `calc(46px * var(--logo-scale, ${ratio}))`, width: "auto" } : undefined)}
         {showText && hasText && (
-          <div className="flex flex-col select-none text-white">
-            <div className="flex items-center gap-1.5 font-sans uppercase font-bold text-sm sm:text-base tracking-[0.18em] leading-none">
-              {primaryText} <span className="text-clay">{secondaryText}</span>
+          <div className="flex flex-col select-none text-white min-w-0">
+            <div 
+              className="flex items-center gap-1 font-sans uppercase font-bold tracking-[0.1em] sm:tracking-[0.18em] leading-none text-xs sm:text-sm md:text-base whitespace-nowrap"
+              style={scalePercent ? { fontSize: `var(--logo-font-size, ${Math.round(15 * ratio)}px)` } : undefined}
+            >
+              <span>{primaryText}</span> <span className="text-clay">{secondaryText}</span>
             </div>
             {subText && (
-              <div className="text-[0.45rem] tracking-[0.25em] font-sans font-semibold text-clay/80 mt-1 whitespace-nowrap">
+              <div 
+                className="hidden sm:block tracking-[0.2em] sm:tracking-[0.25em] font-sans font-semibold text-clay/80 mt-1 whitespace-nowrap text-[8px] sm:text-[10px]"
+                style={scalePercent ? { fontSize: `calc(var(--logo-font-size, ${Math.max(5.5, Math.floor(7 * ratio))}px) * 0.5)` } : undefined}
+              >
                 {subText}
               </div>
             )}
@@ -264,13 +303,18 @@ export default function AfroBaobabLogo({
   const showEmblem = mode !== "custom-text";
   const showText = mode !== "image-url";
   const hasText = primaryText || secondaryText || subText;
+  const ratio = scalePercent ? scalePercent / 100 : 1;
 
   return (
     <div 
       className={`flex items-center gap-4 ${className}`}
-      style={scalePercent ? { transform: `scale(${scalePercent / 100})`, transformOrigin: "left center" } : undefined}
+      style={scalePercent ? { 
+        transform: `scale(${ratio})`, 
+        transformOrigin: "left center",
+        display: "inline-flex" 
+      } : undefined}
     >
-      {showEmblem && renderEmblem("h-16 md:h-20 w-auto")}
+      {showEmblem && renderEmblem("h-16 md:h-20 w-auto", scalePercent ? { height: `${Math.round(72 * ratio)}px`, width: "auto" } : undefined)}
       {showText && hasText && renderTypography()}
     </div>
   );
