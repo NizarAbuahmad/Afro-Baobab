@@ -402,286 +402,307 @@ export default function App() {
               </div>
             </div>
           )}
-
-          {/* INTRO STORY */}
-          <section className="py-24 px-[5vw] max-w-7xl mx-auto relative bg-pattern-mudcloth/40 rounded-[6px] border border-sand/15 bg-white/40 my-16 shadow-xs" id="about">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-              <div className="space-y-6">
-                <div className="label">{data?.header.aboutLabel || "Our Story"}</div>
-                <h2
-                  className="font-serif text-4xl sm:text-5xl font-light leading-[1.15] text-charcoal"
-                  dangerouslySetInnerHTML={{ __html: data?.header.aboutHeading || "A Place Where Culture <br />Is Not Only Seen, <br />But <span className=\"text-clay italic\">Experienced</span>" }}
-                />
-                <p className="text-charcoal/70 text-sm leading-relaxed font-sans max-w-lg">
-                  {data?.header.aboutDesc1 || "Afro Baobab Cultural Hub is more than a venue. It is an immersive cultural learning destination where exhibitions, storytelling, rhythm, movement, creativity, and food become portals into human connection and discovery."}
-                </p>
-                <p className="text-charcoal/70 text-sm leading-relaxed font-sans max-w-lg">
-                  {data?.header.aboutDesc2 || "Rooted in African heritage and open to the world, the hub is designed for curious minds — children, families, professionals, artists, and communities who believe culture has the power to transform."}
-                </p>
-                <div className="pt-4">
-                  <a
-                    href="#experiences"
-                    className="bg-clay hover:bg-terracotta text-white px-7 py-3 rounded-[2px] text-xs font-mono uppercase tracking-widest transition-all inline-block shadow-sm"
-                  >
-                    {data?.header.aboutBtnText || "Explore Experience Zones"}
-                  </a>
-                </div>
-              </div>
-
-              {/* Graphical illustration zone */}
-              <div className="relative p-6 sm:p-10 lg:p-12">
-                <div className="absolute inset-0 bg-[#A64836]/10 rounded-tr-[100px] rounded-bl-[100px] border border-sand/30 transform rotate-1 select-none"></div>
-                
-                <div
-                  className="relative aspect-[4/3] rounded-[4px] overflow-hidden flex flex-col justify-end p-6 shadow-2xl group border border-sand/20 clay-inset-border bg-cover bg-center"
-                  style={{
-                    backgroundImage: data?.header.aboutFeaturedImageMode === "custom-image" && data?.header.aboutFeaturedImageUrl
-                      ? `linear-gradient(rgba(10, 6, 4, 0.45), rgba(15, 10, 8, 0.9)), url(${data.header.aboutFeaturedImageUrl})`
-                      : "linear-gradient(135deg, #3a1f12, #CB6A4A, #1c1208)"
-                  }}
-                >
-                  {/* Decorative mesh */}
-                  {data?.header.aboutFeaturedImageMode !== "custom-image" && (
-                    <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,#E7D6BA_1px,transparent_1px),linear-gradient(-45deg,#E7D6BA_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
-                  )}
-                  
-                  <div className="relative space-y-2 z-10">
-                    <span className="text-sand/70 text-[10px] tracking-widest uppercase font-mono block">
-                      {data?.header.aboutFeaturedBadge || "Featured Immersive Zone"}
-                    </span>
-                    <h4
-                      className="font-serif text-white text-3xl font-light leading-snug"
-                      dangerouslySetInnerHTML={{ __html: data?.header.aboutFeaturedTitle || "The Living Baobab <span className=\"text-clay italic\">Story Room</span>" }}
-                    />
-                    <p className="text-white/70 text-xs font-light leading-relaxed max-w-md">
-                      {data?.header.aboutFeaturedDesc || "Sit under the giant woven Baobab canopy where surround-sound rhythm, projection-mapping story sheets, and live actors combine to share heritage tales."}
-                    </p>
+          {data?.header.showAbout !== false && (
+            <section className="py-24 px-[5vw] max-w-7xl mx-auto relative bg-pattern-mudcloth/40 rounded-[6px] border border-sand/15 bg-white/40 my-16 shadow-xs" id="about">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+                <div className="space-y-6">
+                  <div className="label">{data?.header.aboutLabel || "Our Story"}</div>
+                  <h2
+                    className="font-serif text-4xl sm:text-5xl font-light leading-[1.15] text-charcoal"
+                    dangerouslySetInnerHTML={{ __html: data?.header.aboutHeading || "A Place Where Culture <br />Is Not Only Seen, <br />But <span class=\"text-clay italic\">Experienced</span>" }}
+                  />
+                  <p className="text-charcoal/70 text-sm leading-relaxed font-sans max-w-lg">
+                    {data?.header.aboutDesc1 || "Afro Baobab Cultural Hub is more than a venue. It is an immersive cultural learning destination where exhibitions, storytelling, rhythm, movement, creativity, and food become portals into human connection and discovery."}
+                  </p>
+                  <p className="text-charcoal/70 text-sm leading-relaxed font-sans max-w-lg">
+                    {data?.header.aboutDesc2 || "Rooted in African heritage and open to the world, the hub is designed for curious minds — children, families, professionals, artists, and communities who believe culture has the power to transform."}
+                  </p>
+                  <div className="pt-4">
+                    <a
+                      href="#experiences"
+                      className="bg-clay hover:bg-terracotta text-white px-7 py-3 rounded-[2px] text-xs font-mono uppercase tracking-widest transition-all inline-block shadow-sm"
+                    >
+                      {data?.header.aboutBtnText || "Explore Experience Zones"}
+                    </a>
                   </div>
-                  <span className="absolute bottom-6 right-6 text-white/40 text-[9px] tracking-widest uppercase font-mono select-none z-10">DUBAI · UAE</span>
                 </div>
 
-                <div className="absolute -bottom-6 -left-2 bg-charcoal text-white rounded-[3px] p-5 shadow-xl border border-sand/10 space-y-1 hidden sm:block">
-                  <span className="font-serif text-3xl text-clay font-medium block leading-none">6+</span>
-                  <span className="text-[10px] tracking-wider uppercase text-white/50 block font-mono">Immersive<br />Experience Zones</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* HERITAGE SYMBOLS & PATTERNS INTERACTIVE CANVAS */}
-          <HeritageMotifs />
-
-          <TribalDivider />
-
-          {/* DYNAMIC EXPERIENCES */}
-          <section className="bg-charcoal text-white py-24 px-[5vw] relative overflow-hidden" id="experiences">
-            {/* Soft geometric kente lines in background */}
-            <div className="absolute inset-0 bg-pattern-kente opacity-10 pointer-events-none"></div>
-            
-            <div className="max-w-7xl mx-auto space-y-12 relative z-10">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 boarder-b border-white/10 pb-6">
-                <div>
-                  <div className="label text-clay/70">What We Offer</div>
-                  <h2 className="font-serif text-3xl sm:text-5xl font-light text-white">
-                    Every Visit Is a <span className="text-clay italic">New Journey</span>
-                  </h2>
-                </div>
-                <button
-                  onClick={() => triggerBooking('general')}
-                  className="bg-transparent hover:border-clay hover:text-clay text-white/50 border border-white/10 px-6 py-2.5 rounded-[2px] text-xs font-mono uppercase tracking-widest transition-all cursor-pointer"
-                >
-                  Book Private Tour
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[1.5px] bg-[#2e2318] border border-sand/10">
-                {data?.experiences.map((exp) => (
+                {/* Graphical illustration zone */}
+                <div className="relative p-6 sm:p-10 lg:p-12">
+                  <div className="absolute inset-0 bg-[#A64836]/10 rounded-tr-[100px] rounded-bl-[100px] border border-sand/30 transform rotate-1 select-none"></div>
+                  
                   <div
-                    key={exp.id}
-                    className="p-8 min-h-[290px] flex flex-col justify-end relative overflow-hidden group hover:opacity-95 transition-all duration-300 border border-sand/5 bg-cover bg-center"
+                    className="relative aspect-[4/3] rounded-[4px] overflow-hidden flex flex-col justify-end p-6 shadow-2xl group border border-sand/20 clay-inset-border bg-cover bg-center"
                     style={{
-                      backgroundImage: exp.imageUrl
-                        ? `linear-gradient(rgba(25, 18, 12, 0.45), rgba(25, 18, 12, 0.9)), url(${exp.imageUrl})`
-                        : "none",
-                      backgroundColor: "#19120c"
+                      backgroundImage: data?.header.aboutFeaturedImageMode === "custom-image" && data?.header.aboutFeaturedImageUrl
+                        ? `linear-gradient(rgba(10, 6, 4, 0.45), rgba(15, 10, 8, 0.9)), url(${data.header.aboutFeaturedImageUrl})`
+                        : "linear-gradient(135deg, #3a1f12, #CB6A4A, #1c1208)"
                     }}
                   >
-                    {/* Geometric Diamond Accent */}
-                    <span className="text-clay/20 text-[9px] font-mono tracking-widest absolute top-6 left-8 group-hover:text-clay transition-colors duration-300">
-                      ✦ ◈ ✦
-                    </span>
-                    <div className="absolute top-6 right-6 w-9 h-9 border border-white/10 rounded-full flex items-center justify-center text-white/30 text-sm group-hover:border-clay group-hover:text-clay group-hover:rotate-45 transition-all duration-300">
-                      ↗
-                    </div>
-                    <div>
-                      <span className="font-serif text-clay text-xs tracking-widest uppercase font-semibold block mb-2">
-                        Zone {exp.number}
+                    {/* Decorative mesh */}
+                    {data?.header.aboutFeaturedImageMode !== "custom-image" && (
+                      <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,#E7D6BA_1px,transparent_1px),linear-gradient(-45deg,#E7D6BA_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+                    )}
+                    
+                    <div className="relative space-y-2 z-10">
+                      <span className="text-sand/70 text-[10px] tracking-widest uppercase font-mono block">
+                        {data?.header.aboutFeaturedBadge || "Featured Immersive Zone"}
                       </span>
-                      <h3 className="font-serif text-white text-xl font-medium mb-2">{exp.title}</h3>
-                      <p className="text-white/40 text-xs leading-relaxed font-light font-sans max-w-sm">
-                        {exp.description}
+                      <h4
+                        className="font-serif text-white text-3xl font-light leading-snug"
+                        dangerouslySetInnerHTML={{ __html: data?.header.aboutFeaturedTitle || "The Living Baobab <span class=\"text-clay italic\">Story Room</span>" }}
+                      />
+                      <p className="text-white/70 text-xs font-light leading-relaxed max-w-md">
+                        {data?.header.aboutFeaturedDesc || "Sit under the giant woven Baobab canopy where surround-sound rhythm, projection-mapping story sheets, and live actors combine to share heritage tales."}
                       </p>
                     </div>
-                    {/* Orange underline hover */}
-                    <div className="absolute bottom-0 left-0 h-[2px] bg-clay w-0 group-hover:w-full transition-all duration-500"></div>
+                    <span className="absolute bottom-6 right-6 text-white/40 text-[9px] tracking-widest uppercase font-mono select-none z-10">DUBAI · UAE</span>
                   </div>
-                ))}
+
+                  <div className="absolute -bottom-6 -left-2 bg-charcoal text-white rounded-[3px] p-5 shadow-xl border border-sand/10 space-y-1 hidden sm:block">
+                    <span className="font-serif text-3xl text-clay font-medium block leading-none">{data?.header.aboutStatsNumber || "6+"}</span>
+                    <span className="text-[10px] tracking-wider uppercase text-white/50 block font-mono whitespace-pre-line">{data?.header.aboutStatsLabel || "Immersive\nExperience Zones"}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
-          {/* DYNAMIC EXHIBITIONS */}
-          <section className="bg-sand text-charcoal py-24 px-[5vw] relative overflow-hidden" id="exhibitions">
-            {/* Textured woven mudcloth background */}
-            <div className="absolute inset-0 bg-pattern-mudcloth opacity-[0.25] pointer-events-none"></div>
-            
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center relative z-10">
-              <div>
-                <div className="label !text-moss">Current &amp; Upcoming</div>
-                <h2 className="font-serif text-4xl sm:text-5xl font-light text-charcoal leading-tight">
-                  Where Every Wall <br />Tells a <span className="text-terracotta italic">Story</span>
-                </h2>
-                <p className="text-charcoal/70 text-sm leading-relaxed mt-4 max-w-md">
-                  Our gallery rotates with living exhibitions that cross cultures, geographies, and generations. Touch, listen, edit, and discover.
-                </p>
+          {/* HERITAGE SYMBOLS & PATTERNS INTERACTIVE CANVAS */}
+          {data?.header.showHeritage !== false && (
+            <HeritageMotifs
+              label={data?.header.heritageLabel}
+              title={data?.header.heritageTitle}
+              subTitle={data?.header.heritageSubTitle}
+              design={data?.header.heritageDesign}
+            />
+          )}
 
-                {/* Left Active Exhibition details card preview */}
-                {activeExhibition && (
-                  <div className="mt-8 bg-white/60 backdrop-blur-sm border border-sand rounded-[2px] max-w-md overflow-hidden shadow-md animate-fadeIn clay-inset-border">
-                    {activeExhibition.imageUrl && (
-                      <div className="h-44 w-full bg-charcoal/10 overflow-hidden relative">
-                        <img
-                          src={activeExhibition.imageUrl}
-                          alt={activeExhibition.title}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
+          {data?.header.showHeritage !== false && data?.header.showExperiences !== false && <TribalDivider />}
+
+          {/* DYNAMIC EXPERIENCES */}
+          {data?.header.showExperiences !== false && (
+            <section className="bg-charcoal text-white py-24 px-[5vw] relative overflow-hidden" id="experiences">
+              {/* Soft geometric kente lines in background */}
+              <div className="absolute inset-0 bg-pattern-kente opacity-10 pointer-events-none"></div>
+              
+              <div className="max-w-7xl mx-auto space-y-12 relative z-10">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 boarder-b border-white/10 pb-6">
+                  <div>
+                    <div className="label text-clay/70">{data?.header.experiencesLabel || "What We Offer"}</div>
+                    <h2
+                      className="font-serif text-3xl sm:text-5xl font-light text-white"
+                      dangerouslySetInnerHTML={{ __html: data?.header.experiencesTitle || "Every Visit Is a <span class=\"text-clay italic\">New Journey</span>" }}
+                    />
+                    {data?.header.experiencesSubTitle && (
+                      <p className="text-white/60 text-xs mt-2 max-w-md font-sans leading-relaxed">
+                        {data.header.experiencesSubTitle}
+                      </p>
                     )}
-                    <div className="p-6 space-y-3">
-                      <span className="text-[10px] tracking-widest uppercase font-mono text-clay font-bold block">
-                        {activeExhibition.status === 'Now' ? "ACTIVE EXHIBITION" : `UPCOMING EXHIBITION: ${activeExhibition.status}`}
-                      </span>
-                      <h4 className="font-serif text-charcoal text-xl font-medium leading-snug">
-                        {activeExhibition.title}
-                      </h4>
-                      <p className="text-charcoal/60 text-xs font-mono font-medium">{activeExhibition.type}</p>
-                      <button
-                        onClick={() => triggerBooking('general')}
-                        className="text-clay hover:text-terracotta text-xs font-mono tracking-widest uppercase flex items-center gap-1.5 pt-2 cursor-pointer"
-                      >
-                        Plan Visit For This Exhibition <ArrowUpRight className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* Dynamic Exhibitions interactive list wrapper */}
-              <div className="space-y-2">
-                {data?.exhibitions.map((exh) => (
-                  <div
-                    key={exh.id}
-                    onClick={() => setSelectedExhibitionId(exh.id)}
-                    className={`p-5 rounded-[2px] flex items-center justify-between gap-4 cursor-pointer transition-all duration-200 border-l-[3px] ${
-                      selectedExhibitionId === exh.id
-                        ? "bg-white border-l-terracotta shadow-md translate-x-1"
-                        : "bg-white/40 border-l-transparent hover:bg-white/70"
-                    }`}
+                  <button
+                    onClick={() => triggerBooking('general')}
+                    className="bg-transparent hover:border-clay hover:text-clay text-white/50 border border-white/10 px-6 py-2.5 rounded-[2px] text-xs font-mono uppercase tracking-widest transition-all cursor-pointer"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-8 h-8 rounded-full font-serif flex items-center justify-center text-xs font-medium ${
-                        selectedExhibitionId === exh.id ? "bg-clay text-white" : "bg-charcoal/10 text-charcoal/60"
-                      }`}>
-                        {exh.badge}
+                    Book Private Tour
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[1.5px] bg-[#2e2318] border border-sand/10">
+                  {data?.experiences.map((exp) => (
+                    <div
+                      key={exp.id}
+                      className="p-8 min-h-[290px] flex flex-col justify-end relative overflow-hidden group hover:opacity-95 transition-all duration-300 border border-sand/5 bg-cover bg-center"
+                      style={{
+                        backgroundImage: exp.imageUrl
+                          ? `linear-gradient(rgba(25, 18, 12, 0.45), rgba(25, 18, 12, 0.9)), url(${exp.imageUrl})`
+                          : "none",
+                        backgroundColor: "#19120c"
+                      }}
+                    >
+                      {/* Geometric Diamond Accent */}
+                      <span className="text-clay/20 text-[9px] font-mono tracking-widest absolute top-6 left-8 group-hover:text-clay transition-colors duration-300">
+                        ✦ ◈ ✦
+                      </span>
+                      <div className="absolute top-6 right-6 w-9 h-9 border border-white/10 rounded-full flex items-center justify-center text-white/30 text-sm group-hover:border-clay group-hover:text-clay group-hover:rotate-45 transition-all duration-300">
+                        ↗
                       </div>
                       <div>
-                        <h4 className="font-serif text-charcoal font-medium text-sm sm:text-base leading-tight">
-                          {exh.title}
+                        <span className="font-serif text-clay text-xs tracking-widest uppercase font-semibold block mb-2">
+                          Zone {exp.number}
+                        </span>
+                        <h3 className="font-serif text-white text-xl font-medium mb-2">{exp.title}</h3>
+                        <p className="text-white/40 text-xs leading-relaxed font-light font-sans max-w-sm">
+                          {exp.description}
+                        </p>
+                      </div>
+                      {/* Orange underline hover */}
+                      <div className="absolute bottom-0 left-0 h-[2px] bg-clay w-0 group-hover:w-full transition-all duration-500"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* DYNAMIC EXHIBITIONS */}
+          {data?.header.showExhibitions !== false && (
+            <section className="bg-sand text-charcoal py-24 px-[5vw] relative overflow-hidden" id="exhibitions">
+              {/* Textured woven mudcloth background */}
+              <div className="absolute inset-0 bg-pattern-mudcloth opacity-[0.25] pointer-events-none"></div>
+              
+              <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center relative z-10">
+                <div>
+                  <div className="label !text-moss">{data?.header.exhibitionsLabel || "Current & Upcoming"}</div>
+                  <h2
+                    className="font-serif text-4xl sm:text-5xl font-light text-charcoal leading-tight"
+                    dangerouslySetInnerHTML={{ __html: data?.header.exhibitionsTitle || "Where Every Wall <br />Tells a <span class=\"text-terracotta italic\">Story</span>" }}
+                  />
+                  <p className="text-charcoal/70 text-sm leading-relaxed mt-4 max-w-md">
+                    {data?.header.exhibitionsSubTitle || "Our gallery rotates with living exhibitions that cross cultures, geographies, and generations. Touch, listen, edit, and discover."}
+                  </p>
+
+                  {/* Left Active Exhibition details card preview */}
+                  {activeExhibition && (
+                    <div className="mt-8 bg-white/60 backdrop-blur-sm border border-sand rounded-[2px] max-w-md overflow-hidden shadow-md animate-fadeIn clay-inset-border">
+                      {activeExhibition.imageUrl && (
+                        <div className="h-44 w-full bg-charcoal/10 overflow-hidden relative">
+                          <img
+                            src={activeExhibition.imageUrl}
+                            alt={activeExhibition.title}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+                      )}
+                      <div className="p-6 space-y-3">
+                        <span className="text-[10px] tracking-widest uppercase font-mono text-clay font-bold block">
+                          {activeExhibition.status === 'Now' ? "ACTIVE EXHIBITION" : `UPCOMING EXHIBITION: ${activeExhibition.status}`}
+                        </span>
+                        <h4 className="font-serif text-charcoal text-xl font-medium leading-snug">
+                          {activeExhibition.title}
                         </h4>
-                        <span className="text-[10px] text-charcoal/40 font-mono mt-0.5 block">{exh.type}</span>
+                        <p className="text-charcoal/60 text-xs font-mono font-medium">{activeExhibition.type}</p>
+                        <button
+                          onClick={() => triggerBooking('general')}
+                          className="text-clay hover:text-terracotta text-xs font-mono tracking-widest uppercase flex items-center gap-1.5 pt-2 cursor-pointer"
+                        >
+                          Plan Visit For This Exhibition <ArrowUpRight className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
+                  )}
+                </div>
 
-                    <span className={`px-2.5 py-0.5 rounded-[2px] text-[9px] font-mono uppercase text-nowrap font-medium ${
-                      exh.isNow ? "bg-clay text-white" : "bg-moss/10 text-moss"
-                    }`}>
-                      {exh.status}
-                    </span>
-                  </div>
-                ))}
+                {/* Dynamic Exhibitions interactive list wrapper */}
+                <div className="space-y-2">
+                  {data?.exhibitions.map((exh) => (
+                    <div
+                      key={exh.id}
+                      onClick={() => setSelectedExhibitionId(exh.id)}
+                      className={`p-5 rounded-[2px] flex items-center justify-between gap-4 cursor-pointer transition-all duration-200 border-l-[3px] ${
+                        selectedExhibitionId === exh.id
+                          ? "bg-white border-l-terracotta shadow-md translate-x-1"
+                          : "bg-white/40 border-l-transparent hover:bg-white/70"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-full font-serif flex items-center justify-center text-xs font-medium ${
+                          selectedExhibitionId === exh.id ? "bg-clay text-white" : "bg-charcoal/10 text-charcoal/60"
+                        }`}>
+                          {exh.badge}
+                        </div>
+                        <div>
+                          <h4 className="font-serif text-charcoal font-medium text-sm sm:text-base leading-tight">
+                            {exh.title}
+                          </h4>
+                          <span className="text-[10px] text-charcoal/40 font-mono mt-0.5 block">{exh.type}</span>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-0.5 rounded-[2px] text-[9px] font-mono uppercase text-nowrap font-medium ${
+                        exh.isNow ? "bg-clay text-white" : "bg-moss/10 text-moss"
+                      }`}>
+                        {exh.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
-          <TribalDivider />
+          {data?.header.showSchools !== false && <TribalDivider />}
 
           {/* PATHWAYS FOR SCHOOLS & CORPS */}
-          <section className="py-24 px-[5vw]" id="schools">
-            <div className="max-w-7xl mx-auto space-y-12">
-              <div className="text-center max-w-xl mx-auto space-y-4">
-                <div className="label justify-center">Who We Welcome</div>
-                <h2 className="font-serif text-4xl sm:text-5xl font-light text-charcoal">
-                  Designed for Every <span className="text-clay italic">Curious Mind</span>
-                </h2>
-                <p className="text-[#6a6059] text-sm leading-relaxed max-w-md mx-auto">
-                  Whether you are an educator seeking curriculum-focused learning or a group seeking to build cultural intelligence, we have tailored path programs.
-                </p>
-              </div>
+          {data?.header.showSchools !== false && (
+            <section className="py-24 px-[5vw]" id="schools">
+              <div className="max-w-7xl mx-auto space-y-12">
+                <div className="text-center max-w-xl mx-auto space-y-4">
+                  <div className="label justify-center">{data?.header.schoolsLabel || "Who We Welcome"}</div>
+                  <h2
+                    className="font-serif text-4xl sm:text-5xl font-light text-charcoal"
+                    dangerouslySetInnerHTML={{ __html: data?.header.schoolsTitle || "Designed for Every <span class=\"text-clay italic\">Curious Mind</span>" }}
+                  />
+                  <p className="text-[#6a6059] text-sm leading-relaxed max-w-md mx-auto">
+                    {data?.header.schoolsSubTitle || "Whether you are an educator seeking curriculum-focused learning or a group seeking to build cultural intelligence, we have tailored path programs."}
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* School card */}
-                <div className="bg-indigo text-white p-8 sm:p-12 rounded-[4px] relative overflow-hidden flex flex-col justify-end min-h-[420px] shadow-lg border border-sand/5 clay-inset-border group">
-                  <div className="absolute inset-0 opacity-[0.12] pointer-events-none bg-pattern-kente"></div>
-                  <div className="relative space-y-4 max-w-md z-10">
-                    <span className="text-[#E7D6BA]/60 text-[10px] tracking-widest uppercase font-mono block font-semibold">For Schools</span>
-                    <h3 className="font-serif text-3xl font-light leading-snug group-hover:text-sand transition-colors">School &amp; Educational Visits</h3>
-                    <p className="text-[#E7D6BA]/70 text-xs leading-relaxed font-sans font-light">
-                      Interactive school field-trips for all grades. Modules combine Gallery walk, Baobab Storytelling under canopy, Rhythm circles, and raw clay workshops matching UAE social studies.
-                    </p>
-                    <div className="flex gap-2 flex-wrap pt-2">
-                      <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Curriculum Linked</span>
-                      <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Hands-on Workshops</span>
-                      <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">All Grades</span>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* School card */}
+                  <div className="bg-indigo text-white p-8 sm:p-12 rounded-[4px] relative overflow-hidden flex flex-col justify-end min-h-[420px] shadow-lg border border-sand/5 clay-inset-border group">
+                    <div className="absolute inset-0 opacity-[0.12] pointer-events-none bg-pattern-kente"></div>
+                    <div className="relative space-y-4 max-w-md z-10">
+                      <span className="text-[#E7D6BA]/60 text-[10px] tracking-widest uppercase font-mono block font-semibold">For Schools</span>
+                      <h3 className="font-serif text-3xl font-light leading-snug group-hover:text-sand transition-colors">School &amp; Educational Visits</h3>
+                      <p className="text-[#E7D6BA]/70 text-xs leading-relaxed font-sans font-light">
+                        Interactive school field-trips for all grades. Modules combine Gallery walk, Baobab Storytelling under canopy, Rhythm circles, and raw clay workshops matching UAE social studies.
+                      </p>
+                      <div className="flex gap-2 flex-wrap pt-2">
+                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Curriculum Linked</span>
+                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Hands-on Workshops</span>
+                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">All Grades</span>
+                      </div>
+                      <div className="pt-2">
+                        <button
+                          onClick={() => triggerBooking('school')}
+                          className="bg-transparent hover:bg-white/5 border border-[#E7D6BA]/30 hover:border-clay text-[0.68rem] font-mono tracking-widest text-[#E7D6BA] hover:text-clay uppercase py-2.5 px-6 rounded-[2px] transition-all cursor-pointer"
+                        >
+                          Request School Pack
+                        </button>
+                      </div>
                     </div>
-                    <div className="pt-2">
-                      <button
-                        onClick={() => triggerBooking('school')}
-                        className="bg-transparent hover:bg-white/5 border border-[#E7D6BA]/30 hover:border-clay text-[0.68rem] font-mono tracking-widest text-[#E7D6BA] hover:text-clay uppercase py-2.5 px-6 rounded-[2px] transition-all cursor-pointer"
-                      >
-                        Request School Pack
-                      </button>
+                  </div>
+
+                  {/* Corp card */}
+                  <div className="bg-charcoal text-white p-8 sm:p-12 rounded-[4px] relative overflow-hidden flex flex-col justify-end min-h-[420px] shadow-lg border border-sand/5 clay-inset-border group">
+                    <div className="absolute inset-0 opacity-[0.08] pointer-events-none bg-pattern-mudcloth"></div>
+                    <div className="relative space-y-4 max-w-md z-10">
+                      <span className="text-clay/80 text-[10px] tracking-widest uppercase font-mono block font-semibold animate-pulse">For Organizations</span>
+                      <h3 className="font-serif text-3xl font-light leading-snug group-hover:text-clay transition-colors">Corporate Team Integration</h3>
+                      <p className="text-white/50 text-xs leading-relaxed font-sans font-light">
+                        DEI retreats, global team-building workshops, and client appreciation hosting opportunities. Built around shared creative challenge, food storytelling, and cultural intelligence.
+                      </p>
+                      <div className="flex gap-2 flex-wrap pt-2">
+                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Cultural Intelligence</span>
+                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">DEI Focus</span>
+                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Private Dinners</span>
+                      </div>
+                      <div className="pt-2">
+                        <button
+                          onClick={() => triggerBooking('corporate')}
+                          className="bg-clay hover:bg-terracotta text-white text-[0.68rem] font-mono tracking-widest uppercase py-2.5 px-6 rounded-[2px] transition-colors cursor-pointer shadow-md inline-block"
+                        >
+                          Design An Experience
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Corp card */}
-                <div className="bg-charcoal text-white p-8 sm:p-12 rounded-[4px] relative overflow-hidden flex flex-col justify-end min-h-[420px] shadow-lg border border-sand/5 clay-inset-border group">
-                  <div className="absolute inset-0 opacity-[0.08] pointer-events-none bg-pattern-mudcloth"></div>
-                  <div className="relative space-y-4 max-w-md z-10">
-                    <span className="text-clay/80 text-[10px] tracking-widest uppercase font-mono block font-semibold animate-pulse">For Organizations</span>
-                    <h3 className="font-serif text-3xl font-light leading-snug group-hover:text-clay transition-colors">Corporate Team Integration</h3>
-                    <p className="text-white/50 text-xs leading-relaxed font-sans font-light">
-                      DEI retreats, global team-building workshops, and client appreciation hosting opportunities. Built around shared creative challenge, food storytelling, and cultural intelligence.
-                    </p>
-                    <div className="flex gap-2 flex-wrap pt-2">
-                      <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Cultural Intelligence</span>
-                      <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">DEI Focus</span>
-                      <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Private Dinners</span>
-                    </div>
-                    <div className="pt-2">
-                      <button
-                        onClick={() => triggerBooking('corporate')}
-                        className="bg-clay hover:bg-terracotta text-white text-[0.68rem] font-mono tracking-widest uppercase py-2.5 px-6 rounded-[2px] transition-colors cursor-pointer shadow-md inline-block"
-                      >
-                        Design An Experience
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           <TribalDivider />
 
@@ -699,76 +720,84 @@ export default function App() {
           </div>
 
           {/* EVENTS CALENDAR */}
-          <section className="bg-warm-white py-24 px-[5vw]" id="events">
-            <div className="max-w-7xl mx-auto space-y-12">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-sand/20">
-                <div>
-                  <div className="label">Upcoming Sessions</div>
-                  <h2 className="font-serif text-3xl sm:text-5xl font-light text-charcoal">
-                    What's <span className="text-clay italic">On</span>
-                  </h2>
-                </div>
-                <button
-                  onClick={() => triggerBooking('general')}
-                  className="bg-clay hover:bg-terracotta text-white font-mono uppercase text-xs tracking-widest px-6 py-3 rounded-[2px] transition-colors cursor-pointer shadow-sm"
-                >
-                  Book Events Custom Seat
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data?.events.map((evItem) => (
-                  <div
-                    key={evItem.id}
-                    className="bg-white border border-sand/20 rounded-[3px] overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-                  >
-                    <div
-                      className="h-48 p-4 relative flex justify-end items-start bg-cover bg-center"
-                      style={{
-                        backgroundImage: evItem.imageUrl
-                          ? `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.45)), url(${evItem.imageUrl})`
-                          : "none",
-                        backgroundColor: evItem.theme === 'moss' ? '#202c1c' : evItem.theme === 'indigo' ? '#0d1622' : '#CB6A4A'
-                      }}
-                    >
-                      {!evItem.imageUrl && (
-                        <div className={`absolute inset-0 bg-gradient-to-br ${
-                          evItem.theme === 'clay' ? 'from-clay to-terracotta' :
-                          evItem.theme === 'moss' ? 'from-moss to-[#202c1c]' :
-                          'from-indigo to-[#0d1622]'
-                        }`} />
-                      )}
-                      {/* Grid Decoration */}
-                      <div className="absolute inset-0 opacity-5 bg-[linear-gradient(45deg,#FAF8F4_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none"></div>
-                      
-                      {/* Date Badge */}
-                      <div className="bg-black/40 backdrop-blur-md text-white px-3 py-1.5 text-center rounded-[2px] min-w-[50px] shadow-md border border-white/10 relative z-10">
-                        <span className="font-serif text-lg font-semibold block leading-tight">{evItem.day}</span>
-                        <span className="text-[10px] tracking-wider uppercase opacity-85 block font-mono font-medium">{evItem.month}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-5 space-y-2 flex-grow flex flex-col justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-mono tracking-widest text-clay uppercase block font-bold">
-                          {evItem.category}
-                        </span>
-                        <h4 className="font-serif text-charcoal font-medium text-lg leading-snug line-clamp-2">
-                          {evItem.title}
-                        </h4>
-                      </div>
-
-                      <div className="text-[10px] text-charcoal/50 flex gap-2 pt-3 border-t border-sand/10 font-mono">
-                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {evItem.time}</span>
-                        <span>·</span>
-                        <span>{evItem.audience}</span>
-                      </div>
-                    </div>
+          {data?.header.showEvents !== false && (
+            <section className="bg-warm-white py-24 px-[5vw]" id="events">
+              <div className="max-w-7xl mx-auto space-y-12">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-sand/20">
+                  <div>
+                    <div className="label">{data?.header.eventsLabel || "Upcoming Sessions"}</div>
+                    <h2
+                      className="font-serif text-3xl sm:text-5xl font-light text-charcoal"
+                      dangerouslySetInnerHTML={{ __html: data?.header.eventsTitle || "What's <span class=\"text-clay italic\">On</span>" }}
+                    />
+                    {data?.header.eventsSubTitle && (
+                      <p className="text-charcoal/60 text-xs mt-2 max-w-md font-sans leading-relaxed">
+                        {data.header.eventsSubTitle}
+                      </p>
+                    )}
                   </div>
-                ))}
+                  <button
+                    onClick={() => triggerBooking('general')}
+                    className="bg-clay hover:bg-terracotta text-white font-mono uppercase text-xs tracking-widest px-6 py-3 rounded-[2px] transition-colors cursor-pointer shadow-sm"
+                  >
+                    Book Events Custom Seat
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {data?.events.map((evItem) => (
+                    <div
+                      key={evItem.id}
+                      className="bg-white border border-sand/20 rounded-[3px] overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                    >
+                      <div
+                        className="h-48 p-4 relative flex justify-end items-start bg-cover bg-center"
+                        style={{
+                          backgroundImage: evItem.imageUrl
+                            ? `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.45)), url(${evItem.imageUrl})`
+                            : "none",
+                          backgroundColor: evItem.theme === 'moss' ? '#202c1c' : evItem.theme === 'indigo' ? '#0d1622' : '#CB6A4A'
+                        }}
+                      >
+                        {!evItem.imageUrl && (
+                          <div className={`absolute inset-0 bg-gradient-to-br ${
+                            evItem.theme === 'clay' ? 'from-clay to-terracotta' :
+                            evItem.theme === 'moss' ? 'from-moss to-[#202c1c]' :
+                            'from-indigo to-[#0d1622]'
+                          }`} />
+                        )}
+                        {/* Grid Decoration */}
+                        <div className="absolute inset-0 opacity-5 bg-[linear-gradient(45deg,#FAF8F4_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none"></div>
+                        
+                        {/* Date Badge */}
+                        <div className="bg-black/40 backdrop-blur-md text-white px-3 py-1.5 text-center rounded-[2px] min-w-[50px] shadow-md border border-white/10 relative z-10">
+                          <span className="font-serif text-lg font-semibold block leading-tight">{evItem.day}</span>
+                          <span className="text-[10px] tracking-wider uppercase opacity-85 block font-mono font-medium">{evItem.month}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-5 space-y-2 flex-grow flex flex-col justify-between">
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-mono tracking-widest text-clay uppercase block font-bold">
+                            {evItem.category}
+                          </span>
+                          <h4 className="font-serif text-charcoal font-medium text-lg leading-snug line-clamp-2">
+                            {evItem.title}
+                          </h4>
+                        </div>
+
+                        <div className="text-[10px] text-charcoal/50 flex gap-2 pt-3 border-t border-sand/10 font-mono">
+                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {evItem.time}</span>
+                          <span>·</span>
+                          <span>{evItem.audience}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* NEWSLETTER */}
           <section className="bg-charcoal text-white py-24 px-[5vw]">

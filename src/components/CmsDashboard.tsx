@@ -114,6 +114,42 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [aboutFeaturedDesc, setAboutFeaturedDesc] = useState("");
   const [aboutFeaturedImageMode, setAboutFeaturedImageMode] = useState<"pattern" | "custom-image">("pattern");
   const [aboutFeaturedImageUrl, setAboutFeaturedImageUrl] = useState("");
+  const [aboutStatsNumber, setAboutStatsNumber] = useState("");
+  const [aboutStatsLabel, setAboutStatsLabel] = useState("");
+
+  // Section Visibilities and Custom texts
+  const [showAbout, setShowAbout] = useState(true);
+  const [showHeritage, setShowHeritage] = useState(true);
+  const [showExperiences, setShowExperiences] = useState(true);
+  const [showExhibitions, setShowExhibitions] = useState(true);
+  const [showSchools, setShowSchools] = useState(true);
+  const [showEvents, setShowEvents] = useState(true);
+
+  // Heritage motifs texts & design styles
+  const [heritageLabel, setHeritageLabel] = useState("");
+  const [heritageTitle, setHeritageTitle] = useState("");
+  const [heritageSubTitle, setHeritageSubTitle] = useState("");
+  const [heritageDesign, setHeritageDesign] = useState<"default" | "dark" | "warm" | "minimal">("default");
+
+  // What We Offer experiences texts
+  const [experiencesLabel, setExperiencesLabel] = useState("");
+  const [experiencesTitle, setExperiencesTitle] = useState("");
+  const [experiencesSubTitle, setExperiencesSubTitle] = useState("");
+
+  // Exhibitions texts
+  const [exhibitionsLabel, setExhibitionsLabel] = useState("");
+  const [exhibitionsTitle, setExhibitionsTitle] = useState("");
+  const [exhibitionsSubTitle, setExhibitionsSubTitle] = useState("");
+
+  // Schools/Organizations paths texts
+  const [schoolsLabel, setSchoolsLabel] = useState("");
+  const [schoolsTitle, setSchoolsTitle] = useState("");
+  const [schoolsSubTitle, setSchoolsSubTitle] = useState("");
+
+  // Events session calendar texts
+  const [eventsLabel, setEventsLabel] = useState("");
+  const [eventsTitle, setEventsTitle] = useState("");
+  const [eventsSubTitle, setEventsSubTitle] = useState("");
 
   // Extended theme color states
   const [themeColorClay, setThemeColorClay] = useState("#CB6A4A");
@@ -225,6 +261,36 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
       setAboutFeaturedDesc(data.header.aboutFeaturedDesc || "");
       setAboutFeaturedImageMode(data.header.aboutFeaturedImageMode || "pattern");
       setAboutFeaturedImageUrl(data.header.aboutFeaturedImageUrl || "");
+      setAboutStatsNumber(data.header.aboutStatsNumber || "6+");
+      setAboutStatsLabel(data.header.aboutStatsLabel || "Immersive\nExperience Zones");
+
+      setShowAbout(data.header.showAbout !== false);
+      setShowHeritage(data.header.showHeritage !== false);
+      setShowExperiences(data.header.showExperiences !== false);
+      setShowExhibitions(data.header.showExhibitions !== false);
+      setShowSchools(data.header.showSchools !== false);
+      setShowEvents(data.header.showEvents !== false);
+
+      setHeritageLabel(data.header.heritageLabel || "Living Visual Language");
+      setHeritageTitle(data.header.heritageTitle || "Heritage <span class=\"text-clay italic\">Symbols & Artistry</span>");
+      setHeritageSubTitle(data.header.heritageSubTitle || "Explore the traditional visual motifs of African storytelling. Click on the cultural designs below to learn their philosophy, and compose your own modern textiles using our digital weaving loom.");
+      setHeritageDesign(data.header.heritageDesign || "default");
+
+      setExperiencesLabel(data.header.experiencesLabel || "What We Offer");
+      setExperiencesTitle(data.header.experiencesTitle || "Every Visit Is a <span class=\"text-clay italic\">New Journey</span>");
+      setExperiencesSubTitle(data.header.experiencesSubTitle || "");
+
+      setExhibitionsLabel(data.header.exhibitionsLabel || "Current & Upcoming");
+      setExhibitionsTitle(data.header.exhibitionsTitle || "Where Every Wall <br />Tells a <span class=\"text-terracotta italic\">Story</span>");
+      setExhibitionsSubTitle(data.header.exhibitionsSubTitle || "Our gallery rotates with living exhibitions that cross cultures, geographies, and generations. Touch, listen, edit, and discover.");
+
+      setSchoolsLabel(data.header.schoolsLabel || "Who We Welcome");
+      setSchoolsTitle(data.header.schoolsTitle || "Designed for Every <span class=\"text-clay italic\">Curious Mind</span>");
+      setSchoolsSubTitle(data.header.schoolsSubTitle || "Whether you are an educator seeking curriculum-focused learning or a group seeking to build cultural intelligence, we have tailored path programs.");
+
+      setEventsLabel(data.header.eventsLabel || "Upcoming Sessions");
+      setEventsTitle(data.header.eventsTitle || "What's <span class=\"text-clay italic\">On</span>");
+      setEventsSubTitle(data.header.eventsSubTitle || "");
 
       // Themes, Fonts, inquiry, social, buttons, contact list initial values
       setThemeColorClay(data.header.themeColorClay || "#CB6A4A");
@@ -331,6 +397,38 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         aboutFeaturedDesc,
         aboutFeaturedImageMode,
         aboutFeaturedImageUrl,
+        aboutStatsNumber,
+        aboutStatsLabel,
+
+        // Vision Sections Control toggles
+        showAbout,
+        showHeritage,
+        showExperiences,
+        showExhibitions,
+        showSchools,
+        showEvents,
+
+        // Section custom strings
+        heritageLabel,
+        heritageTitle,
+        heritageSubTitle,
+        heritageDesign,
+
+        experiencesLabel,
+        experiencesTitle,
+        experiencesSubTitle,
+
+        exhibitionsLabel,
+        exhibitionsTitle,
+        exhibitionsSubTitle,
+
+        schoolsLabel,
+        schoolsTitle,
+        schoolsSubTitle,
+
+        eventsLabel,
+        eventsTitle,
+        eventsSubTitle,
 
         // Theme Style Configurations
         themeColorClay,
@@ -1103,6 +1201,329 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         onChange={(e) => setAboutFeaturedDesc(e.target.value)}
                         className="w-full bg-ivory/35 border border-sand/50 p-3 text-xs text-charcoal rounded-[2px] resize-none"
                       />
+                    </div>
+                  </div>
+
+                  {/* INTERACTIVE PAGE SECTIONS CONTROLLER */}
+                  <div className="bg-white border border-sand/30 p-5 rounded-[3px] space-y-6 shadow-sm">
+                    <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">
+                      5. Content blocks: Show/Hide, Customize Titles, & Choose Design
+                    </h4>
+
+                    <p className="text-[11px] text-charcoal/60 leading-relaxed font-sans">
+                      Complete content management control for all major page sections. Decide if they are displayed, alter local section titles/labels, or change designs dynamically.
+                    </p>
+
+                    {/* STORY / ABOUT SECTION CONTROL */}
+                    <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-sand/10 pb-2">
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">A. "Our Story" Block</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showAbout}
+                            onChange={(e) => setShowAbout(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-charcoal/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-moss"></div>
+                          <span className="ml-2 text-[10px] font-mono font-medium">{showAbout ? "Visible" : "Hidden"}</span>
+                        </label>
+                      </div>
+                      
+                      {showAbout && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Stats Big Number Label</label>
+                            <input
+                              type="text"
+                              value={aboutStatsNumber}
+                              onChange={(e) => setAboutStatsNumber(e.target.value)}
+                              placeholder="e.g. 6+"
+                              className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Stats Caption text (use \n for line-breaks)</label>
+                            <input
+                              type="text"
+                              value={aboutStatsLabel}
+                              onChange={(e) => setAboutStatsLabel(e.target.value)}
+                              placeholder="e.g. Immersive Zones"
+                              className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* HERITAGE MOTIFS / LIVING VISUAL LANGUAGE CONTROL */}
+                    <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-sand/10 pb-2">
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">B. "Living Visual Language" (Heritage Motifs)</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showHeritage}
+                            onChange={(e) => setShowHeritage(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-charcoal/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-moss"></div>
+                          <span className="ml-2 text-[10px] font-mono font-medium">{showHeritage ? "Visible" : "Hidden"}</span>
+                        </label>
+                      </div>
+
+                      {showHeritage && (
+                        <div className="space-y-3 pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Tag Label</label>
+                              <input
+                                type="text"
+                                value={heritageLabel}
+                                onChange={(e) => setHeritageLabel(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-mono font-medium text-clay/90 uppercase mb-1">Active Design Style Layout</label>
+                              <select
+                                value={heritageDesign}
+                                onChange={(e) => setHeritageDesign(e.target.value as any)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              >
+                                <option value="default">Default (Artistic high contrast pattern sand)</option>
+                                <option value="dark">Cosmic Dark (Deep charcoal backdrop style)</option>
+                                <option value="warm">Spicy Terracotta (Vibrant earthy terracotta colorway)</option>
+                                <option value="minimal">Minimal Sleek (Sparsely decorated monochrome plain space)</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Big Title (HTML Supported)</label>
+                            <input
+                              type="text"
+                              value={heritageTitle}
+                              onChange={(e) => setHeritageTitle(e.target.value)}
+                              className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Description / Subtitle</label>
+                            <textarea
+                              rows={2}
+                              value={heritageSubTitle}
+                              onChange={(e) => setHeritageSubTitle(e.target.value)}
+                              className="w-full bg-white border border-sand/50 p-2 text-xs text-charcoal rounded-[2px] resize-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* EXPERIENCES / WHAT WE OFFER CONTROL */}
+                    <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-sand/10 pb-2">
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">C. "What We Offer" (Experiences)</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showExperiences}
+                            onChange={(e) => setShowExperiences(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-charcoal/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-moss"></div>
+                          <span className="ml-2 text-[10px] font-mono font-medium">{showExperiences ? "Visible" : "Hidden"}</span>
+                        </label>
+                      </div>
+
+                      {showExperiences && (
+                        <div className="space-y-3 pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Tag Label</label>
+                              <input
+                                type="text"
+                                value={experiencesLabel}
+                                onChange={(e) => setExperiencesLabel(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Big Title (HTML Supported)</label>
+                              <input
+                                type="text"
+                                value={experiencesTitle}
+                                onChange={(e) => setExperiencesTitle(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Description / Subtitle</label>
+                            <textarea
+                              rows={2}
+                              value={experiencesSubTitle}
+                              onChange={(e) => setExperiencesSubTitle(e.target.value)}
+                              placeholder="Optional descriptive intro under the main header"
+                              className="w-full bg-white border border-sand/50 p-2 text-xs text-charcoal rounded-[2px] resize-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* EXHIBITIONS CONTROL */}
+                    <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-sand/10 pb-2">
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">D. "Exhibitions" Section</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showExhibitions}
+                            onChange={(e) => setShowExhibitions(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-charcoal/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-moss"></div>
+                          <span className="ml-2 text-[10px] font-mono font-medium">{showExhibitions ? "Visible" : "Hidden"}</span>
+                        </label>
+                      </div>
+
+                      {showExhibitions && (
+                        <div className="space-y-3 pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Tag Label</label>
+                              <input
+                                type="text"
+                                value={exhibitionsLabel}
+                                onChange={(e) => setExhibitionsLabel(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Big Title (HTML Supported)</label>
+                              <input
+                                type="text"
+                                value={exhibitionsTitle}
+                                onChange={(e) => setExhibitionsTitle(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Description / Subtitle</label>
+                            <textarea
+                              rows={2}
+                              value={exhibitionsSubTitle}
+                              onChange={(e) => setExhibitionsSubTitle(e.target.value)}
+                              className="w-full bg-white border border-sand/50 p-2 text-xs text-charcoal rounded-[2px] resize-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SCHOOLS CONTROL */}
+                    <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-sand/10 pb-2">
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">E. "Designed for Curious Minds" (Schools & Organizations)</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showSchools}
+                            onChange={(e) => setShowSchools(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-charcoal/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-moss"></div>
+                          <span className="ml-2 text-[10px] font-mono font-medium">{showSchools ? "Visible" : "Hidden"}</span>
+                        </label>
+                      </div>
+
+                      {showSchools && (
+                        <div className="space-y-3 pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Tag Label</label>
+                              <input
+                                type="text"
+                                value={schoolsLabel}
+                                onChange={(e) => setSchoolsLabel(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Big Title (HTML Supported)</label>
+                              <input
+                                type="text"
+                                value={schoolsTitle}
+                                onChange={(e) => setSchoolsTitle(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Description / Subtitle</label>
+                            <textarea
+                              rows={2}
+                              value={schoolsSubTitle}
+                              onChange={(e) => setSchoolsSubTitle(e.target.value)}
+                              className="w-full bg-white border border-sand/50 p-2 text-xs text-charcoal rounded-[2px] resize-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* EVENTS CONTROL */}
+                    <div className="border border-sand/20 rounded-[2px] p-4 bg-sand/5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-sand/10 pb-2">
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-charcoal">F. "What's On" (Events Calendar Hub)</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showEvents}
+                            onChange={(e) => setShowEvents(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-charcoal/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-moss"></div>
+                          <span className="ml-2 text-[10px] font-mono font-medium">{showEvents ? "Visible" : "Hidden"}</span>
+                        </label>
+                      </div>
+
+                      {showEvents && (
+                        <div className="space-y-3 pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Tag Label</label>
+                              <input
+                                type="text"
+                                value={eventsLabel}
+                                onChange={(e) => setEventsLabel(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Big Title (HTML Supported)</label>
+                              <input
+                                type="text"
+                                value={eventsTitle}
+                                onChange={(e) => setEventsTitle(e.target.value)}
+                                className="w-full bg-white border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono uppercase text-charcoal/50 mb-1">Section Description / Subtitle</label>
+                            <textarea
+                              rows={2}
+                              value={eventsSubTitle}
+                              onChange={(e) => setEventsSubTitle(e.target.value)}
+                              placeholder="Optional descriptive intro under the main header"
+                              className="w-full bg-white border border-sand/50 p-2 text-xs text-charcoal rounded-[2px] resize-none"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 

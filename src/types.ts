@@ -28,6 +28,7 @@ export interface CmsHeader {
   heroSubSize?: number;
 
   // --- Story Text Customization ---
+  showAbout?: boolean;          // Toggle story section
   aboutLabel?: string;          // "Our Story"
   aboutHeading?: string;        // "A Place Where Culture Is Experienced..."
   aboutDesc1?: string;          // First paragraph
@@ -38,6 +39,39 @@ export interface CmsHeader {
   aboutFeaturedDesc?: string;   // Description of the story room
   aboutFeaturedImageMode?: "pattern" | "custom-image"; // Style of background
   aboutFeaturedImageUrl?: string; // Custom image URL for the about block
+  aboutStatsNumber?: string;    // e.g. "6+"
+  aboutStatsLabel?: string;     // e.g. "Immersive Experience Zones"
+
+  // --- Heritage Symbols Section (Living Visual Language) Customization ---
+  showHeritage?: boolean;
+  heritageLabel?: string;
+  heritageTitle?: string;
+  heritageSubTitle?: string;
+  heritageDesign?: "default" | "warm" | "dark" | "minimal";
+
+  // --- Experiences Section (What We Offer) Customization ---
+  showExperiences?: boolean;
+  experiencesLabel?: string;
+  experiencesTitle?: string;
+  experiencesSubTitle?: string;
+
+  // --- Exhibitions Section Customization ---
+  showExhibitions?: boolean;
+  exhibitionsLabel?: string;
+  exhibitionsTitle?: string;
+  exhibitionsSubTitle?: string;
+
+  // --- Schools Section Customization ---
+  showSchools?: boolean;
+  schoolsLabel?: string;
+  schoolsTitle?: string;
+  schoolsSubTitle?: string;
+
+  // --- Events Section Customization ---
+  showEvents?: boolean;
+  eventsLabel?: string;
+  eventsTitle?: string;
+  eventsSubTitle?: string;
 
   // --- Core Theme Color Customization ---
   themeColorClay?: string;

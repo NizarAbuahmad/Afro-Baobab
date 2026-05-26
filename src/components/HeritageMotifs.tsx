@@ -12,7 +12,19 @@ interface Motif {
   svg: (color: string) => ReactNode;
 }
 
-export default function HeritageMotifs() {
+interface HeritageMotifsProps {
+  label?: string;
+  title?: string;
+  subTitle?: string;
+  design?: "default" | "warm" | "dark" | "minimal";
+}
+
+export default function HeritageMotifs({
+  label = "Living Visual Language",
+  title = "Heritage Symbols & Artistry",
+  subTitle = "Explore the traditional visual motifs of African storytelling. Click on the cultural designs below to learn their philosophy, and compose your own modern textiles using our digital weaving loom.",
+  design = "default"
+}: HeritageMotifsProps) {
   const [selectedId, setSelectedId] = useState("sankofa");
   const [stampColor, setStampColor] = useState("#CB6A4A"); // clay/orange
   const [patternDensity, setPatternDensity] = useState<"sparse" | "medium" | "dense">("medium");
@@ -121,19 +133,47 @@ export default function HeritageMotifs() {
     }
   };
 
+  const isDark = design === "dark";
+  const bgClass = design === "dark" 
+    ? "bg-charcoal text-white border-t border-b border-sand/10" 
+    : design === "warm"
+    ? "bg-[#FAF3E8] border-t border-b border-[#ebd8bc]"
+    : design === "minimal"
+    ? "bg-white border-t border-b border-neutral-100"
+    : "bg-ivory border-t border-b border-sand/30";
+
+  const textHeadingClass = isDark ? "text-white" : "text-charcoal";
+  const textSubClass = isDark ? "text-white/60" : "text-[#5F564F]";
+  const textLabelClass = isDark ? "text-clay font-bold" : "text-moss font-bold";
+  
+  const philCardClass = isDark 
+    ? "lg:col-span-4 bg-[#1c1410] border border-sand/15 p-8 rounded-[4px] min-h-[440px] flex flex-col justify-between shadow-md relative text-white" 
+    : "lg:col-span-4 bg-[#FAF8F4] border border-sand p-8 rounded-[4px] min-h-[440px] flex flex-col justify-between shadow-sm relative text-charcoal";
+    
+  const loomClass = isDark 
+    ? "bg-white/5 border border-sand/10 p-5 rounded-[3px] space-y-3 mt-6 text-white" 
+    : "bg-white/70 backdrop-blur-sm border border-sand/20 p-5 rounded-[3px] space-y-3 mt-6 text-charcoal";
+
+  const canvasBgClass = isDark
+    ? "aspect-square bg-[#1c1410] border border-sand/15 shadow-inner p-6 rounded-[4px] relative flex flex-col justify-between overflow-hidden group"
+    : "aspect-square bg-white border border-sand shadow-inner p-6 rounded-[4px] relative flex flex-col justify-between overflow-hidden group";
+
+  const stampLabelClass = isDark ? "text-white/60" : "text-charcoal/50";
+  const subTextClass = isDark ? "text-white/40" : "text-charcoal/40";
+
   return (
-    <section className="bg-ivory border-t border-b border-sand/30 py-24 px-[5vw] relative overflow-hidden" id="heritage-art">
+    <section className={`${bgClass} py-24 px-[5vw] relative overflow-hidden`} id="heritage-art">
       {/* Background Mudcloth Pattern overlay */}
-      <div className="absolute inset-0 bg-pattern-mudcloth opacity-35 pointer-events-none"></div>
+      {design !== "minimal" && (
+        <div className="absolute inset-0 bg-pattern-mudcloth opacity-35 pointer-events-none"></div>
+      )}
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center max-w-xl mx-auto space-y-4 mb-16">
-          <div className="label justify-center">Living Visual Language</div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-light text-charcoal">
-            Heritage <span className="text-clay italic">Symbols &amp; Artistry</span>
-          </h2>
-          <p className="text-charcoal/70 text-sm leading-relaxed max-w-md mx-auto">
-            Explore the traditional visual motifs of African storytelling. Click on the cultural designs below to learn their philosophy, and compose your own modern textiles using our digital weaving loom.
+          <div className="label justify-center">{label}</div>
+          <h2 className={`font-serif text-4xl sm:text-5xl font-light ${textHeadingClass}`} dangerouslySetInnerHTML={{ __html: title }} />
+          <p className={`text-sm leading-relaxed max-w-md mx-auto ${textSubClass}`}>
+            {subTitle}
           </p>
         </div>
 
@@ -142,34 +182,41 @@ export default function HeritageMotifs() {
           
           {/* LEFT COLUMN: Symbol Selector (Grid of 4) */}
           <div className="lg:col-span-5 space-y-4">
-            <span className="text-[10px] tracking-widest text-[#CB6A4A] font-mono font-bold uppercase block mb-2">Select a Sacred Emblem</span>
+            <span className={`text-[10px] tracking-widest font-mono font-bold uppercase block mb-2 ${isDark ? 'text-clay/90' : 'text-[#CB6A4A]'}`}>Select a Sacred Emblem</span>
             <div className="grid grid-cols-2 gap-4">
-              {motifs.map((motif) => (
-                <button
-                  key={motif.id}
-                  onClick={() => setSelectedId(motif.id)}
-                  id={`motif-btn-${motif.id}`}
-                  className={`p-6 bg-white border rounded-[3px] text-center transition-all flex flex-col items-center justify-center gap-4 cursor-pointer hover:shadow-md ${
-                    selectedId === motif.id
-                      ? "border-clay shadow-md ring-1 ring-clay/20"
-                      : "border-sand/20 hover:border-sand/60"
-                  }`}
-                >
-                  <div className={`w-14 h-14 ${selectedId === motif.id ? "text-clay" : "text-charcoal/30 hover:text-charcoal/60"} transition-colors`}>
-                    {motif.svg(selectedId === motif.id ? stampColor : "#888888")}
-                  </div>
-                  <div>
-                    <span className="font-serif text-charcoal font-medium block text-base leading-none">{motif.name}</span>
-                    <span className="text-[9px] text-[#8C837C] tracking-wide font-mono block mt-1">{motif.origin.split(" ")[0]} Tradition</span>
-                  </div>
-                </button>
-              ))}
+              {motifs.map((motif) => {
+                const isSelected = selectedId === motif.id;
+                return (
+                  <button
+                    key={motif.id}
+                    onClick={() => setSelectedId(motif.id)}
+                    id={`motif-btn-${motif.id}`}
+                    className={`p-6 border rounded-[3px] text-center transition-all flex flex-col items-center justify-center gap-4 cursor-pointer hover:shadow-md ${
+                      isSelected
+                        ? isDark
+                          ? "border-clay bg-clay/20 text-white shadow-md ring-1 ring-clay/30"
+                          : "border-clay bg-white shadow-md ring-1 ring-clay/20"
+                        : isDark
+                          ? "border-sand/10 bg-white/5 text-white/70 hover:bg-white/10"
+                          : "border-sand/20 bg-white hover:border-sand/60 text-charcoal"
+                    }`}
+                  >
+                    <div className={`w-14 h-14 ${isSelected ? "text-clay" : isDark ? "text-white/20 hover:text-white/40" : "text-charcoal/30 hover:text-charcoal/60"} transition-colors`}>
+                      {motif.svg(isSelected ? stampColor : isDark ? "#555555" : "#888888")}
+                    </div>
+                    <div>
+                      <span className={`font-serif font-medium block text-base leading-none ${isDark ? 'text-white' : 'text-charcoal'}`}>{motif.name}</span>
+                      <span className={`text-[9px] tracking-wide font-mono block mt-1 ${isDark ? 'text-white/40' : 'text-[#8C837C]'}`}>{motif.origin.split(" ")[0]} Tradition</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Color Loom Swapper */}
-            <div className="bg-white/70 backdrop-blur-sm border border-sand/20 p-5 rounded-[3px] space-y-3 mt-6">
+            <div className={loomClass}>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] tracking-widest text-charcoal/50 font-mono font-semibold uppercase">Cultural Loom Colors</span>
+                <span className={`text-[10px] tracking-widest font-mono font-semibold uppercase ${isDark ? 'text-white/50' : 'text-charcoal/50'}`}>Cultural Loom Colors</span>
                 <span className="text-[10px] text-clay font-mono">{colors.find((c) => c.value === stampColor)?.name}</span>
               </div>
               <div className="flex gap-2">
@@ -178,7 +225,7 @@ export default function HeritageMotifs() {
                     key={c.value}
                     onClick={() => setStampColor(c.value)}
                     className={`w-8 h-8 rounded-full border-2 cursor-pointer transition-all ${
-                      stampColor === c.value ? "border-charcoal scale-110" : "border-transparent"
+                      stampColor === c.value ? isDark ? "border-white scale-110" : "border-charcoal scale-110" : "border-transparent"
                     }`}
                     style={{ backgroundColor: c.value }}
                     title={c.name}
@@ -188,29 +235,36 @@ export default function HeritageMotifs() {
 
               {/* Pattern Density Swapper */}
               <div className="space-y-2 pt-2 border-t border-sand/10">
-                <span className="text-[10px] tracking-widest text-charcoal/50 font-mono font-semibold uppercase block">Composition Grid</span>
+                <span className={`text-[10px] tracking-widest font-mono font-semibold uppercase block ${isDark ? "text-white/50" : "text-charcoal/50"}`}>Composition Grid</span>
                 <div className="grid grid-cols-3 gap-2">
-                  {(["sparse", "medium", "dense"] as const).map((density) => (
-                    <button
-                      key={density}
-                      onClick={() => setPatternDensity(density)}
-                      className={`py-1.5 px-3 rounded-[2px] text-[10px] font-mono capitalize border transition-all cursor-pointer ${
-                        patternDensity === density
-                          ? "bg-charcoal text-white border-charcoal"
-                          : "bg-white border-sand/30 text-charcoal/60 hover:bg-neutral-50"
-                      }`}
-                    >
-                      {density}
-                    </button>
-                  ))}
+                  {(["sparse", "medium", "dense"] as const).map((density) => {
+                    const isActive = patternDensity === density;
+                    return (
+                      <button
+                        key={density}
+                        onClick={() => setPatternDensity(density)}
+                        className={`py-1.5 px-3 rounded-[2px] text-[10px] font-mono capitalize border transition-all cursor-pointer ${
+                          isActive
+                            ? isDark
+                              ? "bg-clay text-white border-clay"
+                              : "bg-charcoal text-white border-charcoal"
+                            : isDark
+                              ? "bg-white/5 border-sand/10 text-white/50 hover:bg-white/10"
+                              : "bg-white border-sand/30 text-charcoal/60 hover:bg-neutral-50"
+                        }`}
+                      >
+                        {density}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           </div>
 
           {/* MIDDLE COLUMN: Philosphy Card & Proverb */}
-          <div className="lg:col-span-4 bg-[#FAF8F4] border border-sand p-8 rounded-[4px] min-h-[440px] flex flex-col justify-between shadow-sm relative">
-            <span className="absolute top-4 right-4 text-white/5 bg-clay/5 p-1 text-[8px] font-mono tracking-widest uppercase">PHILOSOPHY</span>
+          <div className={philCardClass}>
+            <span className={`absolute top-4 right-4 p-1 text-[8px] font-mono tracking-widest uppercase ${isDark ? 'text-white/15 bg-white/5' : 'text-charcoal/5 bg-clay/5'}`}>PHILOSOPHY</span>
             
             <AnimatePresence mode="wait">
               <motion.div
@@ -223,17 +277,17 @@ export default function HeritageMotifs() {
               >
                 <div>
                   <span className="text-clay/80 text-[10px] tracking-widest uppercase font-mono block">Cultural Art Registry</span>
-                  <h3 className="font-serif text-charcoal text-3xl font-light leading-none pt-1">
+                  <h3 className={`font-serif text-3xl font-light leading-none pt-1 ${isDark ? 'text-white' : 'text-charcoal'}`}>
                     {activeMotif.name}
                   </h3>
-                  <span className="text-xs text-charcoal/40 italic block font-mono font-medium pt-1">
+                  <span className={`text-xs italic block font-mono font-medium pt-1 ${isDark ? 'text-white/45' : 'text-charcoal/40'}`}>
                     Pronounced: {activeMotif.pronunciation} · {activeMotif.origin}
                   </span>
                 </div>
 
                 {/* Cultural Proverb Callout */}
-                <div className="border-l-[3px] border-clay bg-clay/[0.04] p-4 rounded-[2px] italic">
-                  <p className="font-serif text-charcoal text-sm leading-relaxed">
+                <div className={`border-l-[3px] border-clay p-4 rounded-[2px] italic ${isDark ? 'bg-clay/5' : 'bg-clay/[0.04]'}`}>
+                  <p className={`font-serif text-sm leading-relaxed ${isDark ? 'text-white/90' : 'text-charcoal'}`}>
                     {activeMotif.proverb}
                   </p>
                   <span className="text-[9px] font-mono tracking-wider text-clay/90 uppercase block mt-1">
@@ -243,24 +297,24 @@ export default function HeritageMotifs() {
 
                 <div className="space-y-3">
                   <span className="font-serif font-light text-[10px] tracking-widest text-clay uppercase block border-b border-sand/30 pb-1">Meaning &amp; Metaphor</span>
-                  <p className="text-[#5F564F] text-xs leading-relaxed font-sans font-light">
+                  <p className={`text-xs leading-relaxed font-sans font-light ${isDark ? 'text-white/75' : 'text-[#5F564F]'}`}>
                     {activeMotif.description}
                   </p>
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            <div className="pt-6 border-t border-sand/20 text-[10px] font-mono text-charcoal/40 leading-relaxed">
+            <div className={`pt-6 border-t font-mono text-[10px] leading-relaxed ${isDark ? 'border-sand/10 text-white/30' : 'border-sand/20 text-charcoal/40'}`}>
               *Displayed interactive vector graphics representing authenticated research archives.
             </div>
           </div>
 
           {/* RIGHT COLUMN: Live Composition Fabric Canvas */}
           <div className="lg:col-span-3 space-y-3">
-            <span className="text-[10px] tracking-widest text-charcoal/50 font-mono font-bold uppercase block mb-1">Canvas Grid Composition</span>
+            <span className={`text-[10px] tracking-widest font-mono font-bold uppercase block mb-1 ${stampLabelClass}`}>Canvas Grid Composition</span>
             
             {/* The woven fabric screen container */}
-            <div className="aspect-square bg-white border border-sand shadow-inner p-6 rounded-[4px] relative flex flex-col justify-between overflow-hidden group">
+            <div className={canvasBgClass}>
               
               {/* Vertical weave thread threads decoration */}
               <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#000_1px,transparent_1px)] [background-size:8px_100%] pointer-events-none"></div>
@@ -278,7 +332,9 @@ export default function HeritageMotifs() {
                       duration: 0.4,
                       delay: (index % 6) * 0.05
                     }}
-                    className="aspect-square w-full h-full flex items-center justify-center p-2.5 bg-neutral-50/50 rounded-[2px] hover:bg-white hover:shadow-xs transition-shadow"
+                    className={`aspect-square w-full h-full flex items-center justify-center p-2.5 rounded-[2px] transition-shadow ${
+                      isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-neutral-50/50 hover:bg-white hover:shadow-xs'
+                    }`}
                   >
                     {activeMotif.svg(stampColor)}
                   </motion.div>
@@ -286,8 +342,8 @@ export default function HeritageMotifs() {
               </div>
 
               {/* Info ribbon at bottom of grid */}
-              <div className="relative text-center border-t border-sand/30 pt-3 select-none">
-                <span className="text-[9px] tracking-widest uppercase font-mono text-charcoal/40 font-bold block">
+              <div className={`relative text-center border-t pt-3 select-none ${isDark ? 'border-sand/10' : 'border-sand/30'}`}>
+                <span className={`text-[9px] tracking-widest uppercase font-mono font-bold block ${isDark ? 'text-white/55' : 'text-charcoal/40'}`}>
                   DIGITAL TEXTILE SHUTTLE
                 </span>
                 <span className="text-[8px] tracking-wide font-mono text-clay block mt-0.5">
@@ -296,7 +352,7 @@ export default function HeritageMotifs() {
               </div>
             </div>
 
-            <p className="text-charcoal/40 text-[10px] leading-relaxed font-mono text-center">
+            <p className={`text-[10px] leading-relaxed font-mono text-center ${subTextClass}`}>
               Compiles repeating visual tiles representing tribal rhythm patterns.
             </p>
           </div>

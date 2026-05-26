@@ -34,6 +34,7 @@ const SEED_DATA: CmsData = {
     heroGradientEnd: "#141d30",
 
     // Default About Section strings
+    showAbout: true,
     aboutLabel: "Our Story",
     aboutHeading: "A Place Where Culture <br />Is Not Only Seen, <br />But <span class=\"text-clay italic\">Experienced</span>",
     aboutDesc1: "Afro Baobab Cultural Hub is more than a venue. It is an immersive cultural learning destination where exhibitions, storytelling, rhythm, movement, creativity, and food become portals into human connection and discovery.",
@@ -43,7 +44,40 @@ const SEED_DATA: CmsData = {
     aboutFeaturedTitle: "The Living Baobab <span class=\"text-clay italic\">Story Room</span>",
     aboutFeaturedDesc: "Sit under the giant woven Baobab canopy where surround-sound rhythm, projection-mapping story sheets, and live actors combine to share heritage tales.",
     aboutFeaturedImageMode: "pattern",
-    aboutFeaturedImageUrl: ""
+    aboutFeaturedImageUrl: "",
+    aboutStatsNumber: "6+",
+    aboutStatsLabel: "Immersive\nExperience Zones",
+
+    // Default Heritage (Living Visual Language) Customization
+    showHeritage: true,
+    heritageLabel: "Living Visual Language",
+    heritageTitle: "Heritage <span class=\"text-clay italic\">Symbols & Artistry</span>",
+    heritageSubTitle: "Explore the traditional visual motifs of African storytelling. Click on the cultural designs below to learn their philosophy, and compose your own modern textiles using our digital weaving loom.",
+    heritageDesign: "default",
+
+    // Default Experiences Customization
+    showExperiences: true,
+    experiencesLabel: "What We Offer",
+    experiencesTitle: "Every Visit Is a <span class=\"text-clay italic\">New Journey</span>",
+    experiencesSubTitle: "Curated interactive clusters designed for self-discovery and immersive heritage learning.",
+
+    // Default Exhibitions Customization
+    showExhibitions: true,
+    exhibitionsLabel: "Current & Upcoming",
+    exhibitionsTitle: "Where Every Wall <br />Tells a <span class=\"text-terracotta italic\">Story</span>",
+    exhibitionsSubTitle: "Our gallery rotates with living exhibitions that cross cultures, geographies, and generations. Touch, listen, edit, and discover.",
+
+    // Default Schools Customization
+    showSchools: true,
+    schoolsLabel: "Who We Welcome",
+    schoolsTitle: "Designed for Every <span class=\"text-clay italic\">Curious Mind</span>",
+    schoolsSubTitle: "Whether you are an educator seeking curriculum-focused learning or a group seeking to build cultural intelligence, we have tailored path programs.",
+
+    // Default Events Customization
+    showEvents: true,
+    eventsLabel: "Upcoming Sessions",
+    eventsTitle: "What's <span class=\"text-clay italic\">On</span>",
+    eventsSubTitle: "Reserve your spot in our upcoming heritage sessions, rhythm circles, and family celebrations."
   },
   experiences: [
     {
@@ -163,7 +197,7 @@ function getLocalDb(): CmsData {
     try {
       const parsed = JSON.parse(existing);
       // Smoothly populate missing brand and wallpaper customization keys
-      if (parsed.header && parsed.header.logoTextPrimary === undefined) {
+      if (parsed.header && (parsed.header.logoTextPrimary === undefined || parsed.header.showHeritage === undefined)) {
         parsed.header = { ...SEED_DATA.header, ...parsed.header };
         saveLocalDb(parsed);
       }

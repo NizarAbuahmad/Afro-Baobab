@@ -30,9 +30,9 @@ export default function AfroBaobabLogo({
   scalePercent
 }: LogoProps) {
   const activeColor = logoEmblemColor || color;
-  const primaryText = logoTextPrimary || "AFRO";
-  const secondaryText = logoTextSecondary || "BAOBAB";
-  const subText = logoSub || "CULTURAL HUB & ART GALLERY";
+  const primaryText = (logoTextPrimary !== undefined && logoTextPrimary !== null) ? logoTextPrimary : "AFRO";
+  const secondaryText = (logoTextSecondary !== undefined && logoTextSecondary !== null) ? logoTextSecondary : "BAOBAB";
+  const subText = (logoSub !== undefined && logoSub !== null) ? logoSub : "CULTURAL HUB & ART GALLERY";
   const mode = logoMode || "default-emblem";
 
   const isDefaultPrimary = primaryText.toUpperCase() === "AFRO";
@@ -237,31 +237,41 @@ export default function AfroBaobabLogo({
 
   if (variant === "navbar") {
     const showEmblem = mode !== "custom-text";
+    const showText = mode !== "image-url";
+    const hasText = primaryText || secondaryText || subText;
     return (
       <div 
         className={`flex items-center gap-3.5 ${className}`}
         style={scalePercent ? { transform: `scale(${scalePercent / 100})`, transformOrigin: "left center" } : undefined}
       >
         {showEmblem && renderEmblem("h-11 sm:h-13 w-auto")}
-        <div className="flex flex-col select-none text-white">
-          <div className="flex items-center gap-1.5 font-sans uppercase font-bold text-sm sm:text-base tracking-[0.18em] leading-none">
-            {primaryText} <span className="text-clay">{secondaryText}</span>
+        {showText && hasText && (
+          <div className="flex flex-col select-none text-white">
+            <div className="flex items-center gap-1.5 font-sans uppercase font-bold text-sm sm:text-base tracking-[0.18em] leading-none">
+              {primaryText} <span className="text-clay">{secondaryText}</span>
+            </div>
+            {subText && (
+              <div className="text-[0.45rem] tracking-[0.25em] font-sans font-semibold text-clay/80 mt-1 whitespace-nowrap">
+                {subText}
+              </div>
+            )}
           </div>
-          <div className="text-[0.45rem] tracking-[0.25em] font-sans font-semibold text-clay/80 mt-1 whitespace-nowrap">
-            {subText}
-          </div>
-        </div>
+        )}
       </div>
     );
   }
+
+  const showEmblem = mode !== "custom-text";
+  const showText = mode !== "image-url";
+  const hasText = primaryText || secondaryText || subText;
 
   return (
     <div 
       className={`flex items-center gap-4 ${className}`}
       style={scalePercent ? { transform: `scale(${scalePercent / 100})`, transformOrigin: "left center" } : undefined}
     >
-      {mode !== "custom-text" && renderEmblem("h-16 md:h-20 w-auto")}
-      {renderTypography()}
+      {showEmblem && renderEmblem("h-16 md:h-20 w-auto")}
+      {showText && hasText && renderTypography()}
     </div>
   );
 }
