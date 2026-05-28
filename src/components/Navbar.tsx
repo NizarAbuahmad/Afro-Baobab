@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Lock, Sparkles, BookOpen, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import AfroBaobabLogo from "./AfroBaobabLogo";
@@ -12,9 +12,10 @@ interface NavbarProps {
   header?: CmsHeader;
   customPages?: CustomPage[];
   onSelectPage?: (page: CustomPage) => void;
+  onSelectPageBySlug?: (slug: string) => void;
 }
 
-export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, header, customPages, onSelectPage }: NavbarProps) {
+export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, header, customPages, onSelectPage, onSelectPageBySlug }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -27,6 +28,7 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, he
   }, []);
 
   const logoPosition = header?.navbarLogoPosition || "left";
+  const isSubPage = typeof window !== "undefined" && window.location.pathname !== "/";
 
   return (
     <nav
@@ -44,7 +46,7 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, he
             : "flex items-center justify-between py-4"
       }`}
     >
-      <a href="#" className="flex items-center gap-1.5 sm:gap-2 group shrink min-w-0 max-w-[62%] sm:max-w-none">
+      <a href={isSubPage ? "/" : "#"} className="flex items-center gap-1.5 sm:gap-2 group shrink min-w-0 max-w-[62%] sm:max-w-none">
         <AfroBaobabLogo
           variant="navbar"
           color="#CB6A4A"
@@ -64,31 +66,7 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, he
       <ul className={`hidden md:flex items-center gap-6 md:gap-8 list-none font-sans justify-center m-0 p-0`}>
         <li>
           <a
-            href="#experiences"
-            className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-light transition-colors duration-200"
-          >
-            Experiences
-          </a>
-        </li>
-        <li>
-          <a
-            href="#exhibitions"
-            className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-light transition-colors duration-200"
-          >
-            Exhibitions
-          </a>
-        </li>
-        <li>
-          <a
-            href="#schools"
-            className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-light transition-colors duration-200"
-          >
-            Education
-          </a>
-        </li>
-        <li>
-          <a
-            href="#events"
+            href={isSubPage ? "/#events" : "#events"}
             className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-light transition-colors duration-200"
           >
             Events
@@ -96,28 +74,66 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, he
         </li>
 
         {/* Dynamic CMS Pages in Navbar */}
-        {customPages?.filter(p => p.shownInNavbar).map((p) => (
-          <li key={p.id}>
-            <button
-              onClick={() => onSelectPage?.(p)}
-              className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-medium transition-colors duration-200 cursor-pointer bg-transparent border-0 py-0 px-1 hover:translate-y-[-1px]"
-            >
-              {p.title}
-            </button>
-          </li>
-        ))}
+        {customPages?.filter(p => p.shownInNavbar).map((p) => {
+          if (p.slug === "corporate") {
+            return (
+              <React.Fragment key={p.id}>
+                <li>
+                  <a
+                    href="/corporate"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-semibold transition-colors duration-200 inline-block py-0 px-1 hover:translate-y-[-1px] cursor-pointer"
+                  >
+                    {p.title}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/coming-soon"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onSelectPageBySlug?.("/coming-soon");
+                    }}
+                    className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-light transition-colors duration-200 cursor-pointer"
+                  >
+                    Coming Soon
+                  </a>
+                </li>
+              </React.Fragment>
+            );
+          }
+          if (p.slug === "schools") {
+            return (
+              <li key={p.id}>
+                <a
+                  href="/schools"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onSelectPageBySlug?.("schools");
+                  }}
+                  className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-semibold transition-colors duration-200 inline-block py-0 px-1 hover:translate-y-[-1px] cursor-pointer"
+                >
+                  {p.title}
+                </a>
+              </li>
+            );
+          }
+          return (
+            <li key={p.id}>
+              <button
+                onClick={() => onSelectPage?.(p)}
+                className="text-white/70 hover:text-clay text-[0.78rem] tracking-[0.12em] uppercase font-medium transition-colors duration-200 cursor-pointer bg-transparent border-0 py-0 px-1 hover:translate-y-[-1px]"
+              >
+                {p.title}
+              </button>
+            </li>
+          );
+        })}
       </ul>
 
       {/* Right actions (with responsive toggle button) */}
       <div className="flex items-center gap-1.5 sm:gap-3 px-1 sm:px-0 shrink-0">
-        {/* Book / Inquire (compact on mobile) */}
-        <button
-          onClick={() => onOpenBooking('general')}
-          className="bg-clay hover:bg-terracotta text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-[2px] text-[0.68rem] sm:text-[0.78rem] tracking-[0.05em] sm:tracking-[0.1em] font-medium transition-all duration-200 cursor-pointer shadow-sm hover:-translate-y-[1px] select-none"
-        >
-          Book
-        </button>
-
         {/* CMS Desk Access */}
         {isAdmin ? (
           <div className="flex items-center gap-1 sm:gap-2">
@@ -172,55 +188,77 @@ export default function Navbar({ onOpenCms, onOpenBooking, isAdmin, onLogout, he
             <ul className="flex flex-col p-6 space-y-3.5 list-none font-sans text-left bg-[#19110b] border-t border-sand/10 m-0">
               <li>
                 <a
-                  href="#experiences"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-light transition-colors duration-200 block py-1 border-b border-white/5"
-                >
-                  Experiences
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#exhibitions"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-light transition-colors duration-200 block py-1 border-b border-white/5"
-                >
-                  Exhibitions
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#schools"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-light transition-colors duration-200 block py-1 border-b border-white/5"
-                >
-                  Education
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#events"
+                  href={isSubPage ? "/#events" : "#events"}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-light transition-colors duration-200 block py-1 border-b border-white/5"
                 >
                   Events
                 </a>
               </li>
-              
+
               {/* Custom dynamic pages inside drawer */}
-              {customPages?.filter(p => p.shownInNavbar).map((p) => (
-                <li key={p.id}>
-                  <button
-                    onClick={() => {
-                      onSelectPage?.(p);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-medium transition-colors duration-200 cursor-pointer bg-transparent border-0 p-0 block py-1 text-left w-full border-b border-white/5"
-                  >
-                    ✧ {p.title}
-                  </button>
-                </li>
-              ))}
+              {customPages?.filter(p => p.shownInNavbar).map((p) => {
+                if (p.slug === "corporate") {
+                  return (
+                    <React.Fragment key={p.id}>
+                      <li>
+                        <a
+                          href="/corporate"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-medium transition-colors duration-200 block py-1 text-left w-full border-b border-white/5 cursor-pointer"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          ✧ {p.title}
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="/coming-soon"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onSelectPageBySlug?.("/coming-soon");
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-light transition-colors duration-200 block py-1 border-b border-white/5 cursor-pointer text-left"
+                        >
+                          Coming Soon
+                        </a>
+                      </li>
+                    </React.Fragment>
+                  );
+                }
+                if (p.slug === "schools") {
+                  return (
+                    <li key={p.id}>
+                      <a
+                        href="/schools"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onSelectPageBySlug?.("schools");
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-medium transition-colors duration-200 block py-1 text-left w-full border-b border-white/5 cursor-pointer"
+                      >
+                        ✧ {p.title}
+                      </a>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={p.id}>
+                    <button
+                      onClick={() => {
+                        onSelectPage?.(p);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="text-white/80 hover:text-clay text-sm tracking-[0.12em] uppercase font-medium transition-colors duration-200 cursor-pointer bg-transparent border-0 p-0 block py-1 text-left w-full border-b border-white/5"
+                    >
+                      ✧ {p.title}
+                    </button>
+                  </li>
+                );
+              })}
 
               {isAdmin && (
                 <li className="pt-2">

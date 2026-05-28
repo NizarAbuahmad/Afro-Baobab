@@ -103,6 +103,8 @@ export interface CmsHeader {
   socialTwitter?: string;
   socialTiktok?: string;
   socialYoutube?: string;
+  socialLinkedin?: string;
+  customSocials?: CustomSocial[];
 
   // --- Inquiry Booking Notification Target Email ---
   inquiryRecipientEmail?: string;
@@ -125,6 +127,24 @@ export interface CmsHeader {
   showWhatsApp?: boolean;        // Toggle floating WhatsApp contact button
   whatsAppNumber?: string;       // Phone number (e.g. "+971501234567")
   whatsAppMessage?: string;      // Optional default pre-filled message
+
+  // --- Coming Soon Customization ---
+  csHeroEyebrow?: string;
+  csHeroHeadline?: string;
+  csHeroSub?: string;
+  csTargetDate?: string;         // e.g., "2026-09-01T10:00:00"
+  csSectionLabel?: string;
+  csSectionTitle?: string;
+  csExp1Title?: string;
+  csExp1Desc?: string;
+  csExp2Title?: string;
+  csExp2Desc?: string;
+  csExp3Title?: string;
+  csExp3Desc?: string;
+  csExp4Title?: string;
+  csExp4Desc?: string;
+  csQuoteText?: string;
+  csQuoteAttr?: string;
 }
 
 export interface CustomPage {
@@ -177,6 +197,29 @@ export interface Booking {
   timestamp: string;
 }
 
+export interface CustomSocial {
+  id: string;
+  name: string;
+  url: string;
+  iconName?: string;
+}
+
+export interface CmsUser {
+  id: string;
+  username: string;
+  password?: string;
+  role: "admin" | "editor";
+  createdAt: string;
+  permissions?: string[];
+}
+
+export interface CarouselSlide {
+  id: string;
+  imageUrl: string;
+  title: string;
+  desc: string;
+}
+
 export interface CmsData {
   header: CmsHeader;
   experiences: Experience[];
@@ -184,4 +227,6 @@ export interface CmsData {
   events: EventItem[];
   bookings: Booking[];
   customPages?: CustomPage[]; // Newly dynamic custom subpages list
+  users?: CmsUser[];         // Dynamic CMS user administration roster
+  carouselSlides?: CarouselSlide[]; // Custom editable carousel slides list
 }

@@ -1,10 +1,10 @@
 import { useState, useEffect, FormEvent } from "react";
-import { CmsData, Experience, Exhibition, EventItem, Booking, CustomPage } from "../types";
+import { CmsData, Experience, Exhibition, EventItem, Booking, CustomPage, CmsUser, CustomSocial } from "../types";
 import { 
   X, Check, Trash2, Plus, LogOut, Settings, 
   BookOpen, Calendar, HelpCircle, Mail, Phone,
   Bookmark, Edit3, ArrowRight, ShieldCheck, Lock, Unlock,
-  FileText, Globe, Palette, Type, UploadIcon
+  FileText, Globe, Palette, Type, UploadIcon, Users, Image
 } from "lucide-react";
 import {
   cmsLogin,
@@ -19,7 +19,12 @@ import {
   deleteCmsBooking,
   saveCmsPage,
   deleteCmsPage,
-  uploadCmsImage
+  uploadCmsImage,
+  getCmsUsers,
+  saveCmsUser,
+  deleteCmsUser,
+  saveCmsCarousel,
+  deleteCmsCarousel
 } from "../lib/cmsClient";
 
 interface CmsDashboardProps {
@@ -32,6 +37,7 @@ interface CmsDashboardProps {
 type TabType = 
   | "branding" 
   | "theme" 
+  | "coming_soon"
   | "hero_slides" 
   | "our_story" 
   | "experiences" 
@@ -39,7 +45,9 @@ type TabType =
   | "events" 
   | "contacts" 
   | "bookings" 
-  | "pages";
+  | "pages"
+  | "users"
+  | "gallery_carousel";
 
 function FileInputButton({ onUploaded, label = "Upload from Computer", accept = "image/*" }: { onUploaded: (url: string) => void; label?: string; accept?: string }) {
   const [uploading, setUploading] = useState(false);
@@ -191,6 +199,18 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [socialTwitter, setSocialTwitter] = useState("");
   const [socialTiktok, setSocialTiktok] = useState("");
   const [socialYoutube, setSocialYoutube] = useState("");
+  const [socialLinkedin, setSocialLinkedin] = useState("");
+  const [customSocials, setCustomSocials] = useState<CustomSocial[]>([]);
+  const [newSocialName, setNewSocialName] = useState("");
+  const [newSocialUrl, setNewSocialUrl] = useState("");
+
+  // Managed CMS Users layout states
+  const [users, setUsers] = useState<CmsUser[]>([]);
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState<"admin" | "editor">("editor");
+  const [editingUser, setEditingUser] = useState<CmsUser | null>(null);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(["edit_content"]);
 
   // Inquiry target email state
   const [inquiryRecipientEmail, setInquiryRecipientEmail] = useState("inquiry@afrobaobab.com");
@@ -223,6 +243,24 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [whatsAppNumber, setWhatsAppNumber] = useState("");
   const [whatsAppMessage, setWhatsAppMessage] = useState("");
 
+  // Coming Soon Customization states
+  const [csHeroEyebrow, setCsHeroEyebrow] = useState("");
+  const [csHeroHeadline, setCsHeroHeadline] = useState("");
+  const [csHeroSub, setCsHeroSub] = useState("");
+  const [csTargetDate, setCsTargetDate] = useState("");
+  const [csSectionLabel, setCsSectionLabel] = useState("");
+  const [csSectionTitle, setCsSectionTitle] = useState("");
+  const [csExp1Title, setCsExp1Title] = useState("");
+  const [csExp1Desc, setCsExp1Desc] = useState("");
+  const [csExp2Title, setCsExp2Title] = useState("");
+  const [csExp2Desc, setCsExp2Desc] = useState("");
+  const [csExp3Title, setCsExp3Title] = useState("");
+  const [csExp3Desc, setCsExp3Desc] = useState("");
+  const [csExp4Title, setCsExp4Title] = useState("");
+  const [csExp4Desc, setCsExp4Desc] = useState("");
+  const [csQuoteText, setCsQuoteText] = useState("");
+  const [csQuoteAttr, setCsQuoteAttr] = useState("");
+
   // Custom subpage manager states
   const [pageTitle, setPageTitle] = useState("");
   const [pageSlug, setPageSlug] = useState("");
@@ -251,6 +289,18 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
   const [evAudience, setEvAudience] = useState("");
   const [evTheme, setEvTheme] = useState<'clay' | 'moss' | 'indigo'>("clay");
   const [evImageUrl, setEvImageUrl] = useState("");
+
+  // Carousel Slide editing states
+  const [csTitle, setCsTitle] = useState("");
+  const [csDesc, setCsDesc] = useState("");
+  const [csImageUrl, setCsImageUrl] = useState("");
+
+  const scrollToFormTop = () => {
+    const container = document.getElementById("cms-panel-content");
+    if (container) {
+      container.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   // Load Initial states when data loads
   useEffect(() => {
@@ -338,11 +388,13 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
       setContactAddress(data.header.contactAddress || "Alserkal Avenue, Al Quoz, Dubai, UAE");
       setContactHours(data.header.contactHours || "Mon - Sun: 10:00 AM - 9:00 PM");
 
-      setSocialInstagram(data.header.socialInstagram || "");
+       setSocialInstagram(data.header.socialInstagram || "");
       setSocialFacebook(data.header.socialFacebook || "");
       setSocialTwitter(data.header.socialTwitter || "");
       setSocialTiktok(data.header.socialTiktok || "");
       setSocialYoutube(data.header.socialYoutube || "");
+      setSocialLinkedin(data.header.socialLinkedin || "");
+      setCustomSocials(data.header.customSocials || []);
 
       setInquiryRecipientEmail(data.header.inquiryRecipientEmail || "inquiry@afrobaobab.com");
       setNavbarLogoSize(data.header.navbarLogoSize || 100);
@@ -366,6 +418,24 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
       setShowWhatsApp(!!data.header.showWhatsApp);
       setWhatsAppNumber(data.header.whatsAppNumber || "");
       setWhatsAppMessage(data.header.whatsAppMessage || "");
+
+      // Coming Soon values
+      setCsHeroEyebrow(data.header.csHeroEyebrow || "Dubai · Opening September 2026");
+      setCsHeroHeadline(data.header.csHeroHeadline || "Where culture becomes<br><em>something you feel</em>");
+      setCsHeroSub(data.header.csHeroSub || "An immersive cultural hub designed for curiosity, creativity, and human connection — through storytelling, rhythm, movement, and shared experience.");
+      setCsTargetDate(data.header.csTargetDate || "2026-09-01T10:00:00");
+      setCsSectionLabel(data.header.csSectionLabel || "What awaits you");
+      setCsSectionTitle(data.header.csSectionTitle || "A living space where culture is experienced, not observed");
+      setCsExp1Title(data.header.csExp1Title || "Storytelling & Exhibitions");
+      setCsExp1Desc(data.header.csExp1Desc || "Rotating cultural exhibitions and immersive storytelling environments that invite participation and emotional discovery.");
+      setCsExp2Title(data.header.csExp2Title || "Rhythm & Movement");
+      setCsExp2Desc(data.header.csExp2Desc || "Live drumming, music, and movement experiences that connect through sound and shared physical expression.");
+      setCsExp3Title(data.header.csExp3Title || "Creative Workshops");
+      setCsExp3Desc(data.header.csExp3Desc || "Hands-on experiences in mask-making, jewellery, visual arts, poetry, and cultural craft — for all ages and backgrounds.");
+      setCsExp4Title(data.header.csExp4Title || "Connection & Community");
+      setCsExp4Desc(data.header.csExp4Desc || "Gatherings, corporate experiences, school programmes, and cultural events designed to bridge backgrounds and generations.");
+      setCsQuoteText(data.header.csQuoteText || "Some experiences are remembered because they are seen. Others are remembered because they are felt. This is the kind of space we are building.");
+      setCsQuoteAttr(data.header.csQuoteAttr || "The Afro Baobab Vision");
     }
   }, [data]);
 
@@ -503,6 +573,8 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         socialTwitter,
         socialTiktok,
         socialYoutube,
+        socialLinkedin,
+        customSocials,
 
         // Audio
         audioUrl,
@@ -517,6 +589,24 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
         showWhatsApp,
         whatsAppNumber,
         whatsAppMessage,
+
+        // Coming Soon Customizations
+        csHeroEyebrow,
+        csHeroHeadline,
+        csHeroSub,
+        csTargetDate,
+        csSectionLabel,
+        csSectionTitle,
+        csExp1Title,
+        csExp1Desc,
+        csExp2Title,
+        csExp2Desc,
+        csExp3Title,
+        csExp3Desc,
+        csExp4Title,
+        csExp4Desc,
+        csQuoteText,
+        csQuoteAttr,
       });
       if (res.success) {
         alert("Homepage configuration saved successfully!");
@@ -524,6 +614,120 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
       }
     } catch (err) {
       alert("Failed to save changes.");
+    }
+  };
+
+  const handleAddCustomSocial = () => {
+    if (!newSocialName.trim() || !newSocialUrl.trim()) {
+      alert("Please provide both social media platform name and profile link URL.");
+      return;
+    }
+    const newItem: CustomSocial = {
+      id: "social-" + Date.now(),
+      name: newSocialName.trim(),
+      url: newSocialUrl.trim()
+    };
+    setCustomSocials([...customSocials, newItem]);
+    setNewSocialName("");
+    setNewSocialUrl("");
+  };
+
+  const handleRemoveCustomSocial = (id: string) => {
+    setCustomSocials(customSocials.filter(s => s.id !== id));
+  };
+
+  const loadUsersRoster = async () => {
+    try {
+      const u = await getCmsUsers();
+      setUsers(u);
+    } catch (err) {
+      console.error("Failed to load users roster", err);
+    }
+  };
+
+  useEffect(() => {
+    if (sessionToken && activeTab === "users") {
+      loadUsersRoster();
+    }
+  }, [sessionToken, activeTab]);
+
+  const handleSaveUserSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newUsername.trim()) {
+      alert("Please provide a username.");
+      return;
+    }
+
+    try {
+      const payload: Partial<CmsUser> = {
+        username: newUsername.trim(),
+        role: newRole,
+        permissions: selectedPermissions,
+      };
+      if (newPassword) {
+        payload.password = newPassword;
+      } else if (!editingUser) {
+        alert("Password is required for new users.");
+        return;
+      }
+
+      const res = await saveCmsUser(editingUser ? editingUser.id : null, payload);
+      if (res.success) {
+        alert(editingUser ? "User details changed successfully!" : "New user assigned successfully!");
+        setNewUsername("");
+        setNewPassword("");
+        setNewRole("editor");
+        setSelectedPermissions(["edit_content"]);
+        setEditingUser(null);
+        loadUsersRoster();
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to save user details.");
+    }
+  };
+
+  const handleDeleteUserClick = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user connection?")) return;
+    try {
+      const res = await deleteCmsUser(userId);
+      if (res.success) {
+        alert("User account removed successfully.");
+        loadUsersRoster();
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to delete user.");
+    }
+  };
+
+  // Add/Update Carousel Slides
+  const handleSaveCarousel = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await saveCmsCarousel(editingItemId, {
+        title: csTitle,
+        desc: csDesc,
+        imageUrl: csImageUrl
+      });
+
+      if (res.success) {
+        setCsTitle("");
+        setCsDesc("");
+        setCsImageUrl("");
+        setEditingItemId(null);
+        onRefresh();
+      }
+    } catch (err) {
+      alert("Failed to save carousel slide.");
+    }
+  };
+
+  const handleDeleteCarousel = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this carousel slide?")) return;
+    try {
+      const res = await deleteCmsCarousel(id);
+      if (res.success) onRefresh();
+    } catch (err) {
+      alert("Failed to delete.");
     }
   };
 
@@ -843,6 +1047,21 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                   <Palette className="w-4 h-4 text-sand/60" /> Theme & Wallpaper
                 </button>
 
+                {/* COMING SOON TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("coming_soon");
+                    setEditingItemId(null);
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "coming_soon"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Calendar className="w-4 h-4 text-sand/60" /> Coming Soon Page
+                </button>
+
                 {/* 3. HERO SLIDES TAB */}
                 <button
                   onClick={() => {
@@ -856,6 +1075,24 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                   }`}
                 >
                   <Type className="w-4 h-4 text-sand/60" /> Hero & Spotlight
+                </button>
+
+                {/* Gallery Carousel */}
+                <button
+                  onClick={() => {
+                    setActiveTab("gallery_carousel");
+                    setEditingItemId(null);
+                    setCsTitle("");
+                    setCsDesc("");
+                    setCsImageUrl("");
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "gallery_carousel"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Image className="w-4 h-4 text-sand/60" /> Gallery Carousel
                 </button>
 
                 {/* 4. OUR STORY TAB */}
@@ -970,6 +1207,24 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                     </span>
                   )}
                 </button>
+
+                {/* 11. USERS ADMINISTRATION TAB */}
+                <button
+                  onClick={() => {
+                    setActiveTab("users");
+                    setEditingUser(null);
+                    setNewUsername("");
+                    setNewPassword("");
+                    setNewRole("editor");
+                  }}
+                  className={`flex-1 md:flex-none py-3 px-4 text-left text-xs font-sans font-medium flex items-center gap-2.5 transition-all text-nowrap cursor-pointer shrink-0 ${
+                    activeTab === "users"
+                      ? "bg-clay text-white font-semibold shadow-inner border-l-4 border-sand"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Users className="w-4 h-4 text-sand/60" /> CMS Users Desk
+                </button>
               </div>
 
               {/* Quick Logout and Status line */}
@@ -984,7 +1239,208 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
             </div>
 
             {/* Inner Desk Content */}
-            <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-warm-white">
+            <div id="cms-panel-content" className="flex-1 p-6 md:p-8 overflow-y-auto bg-warm-white">
+              {/* coming_soon */}
+              {activeTab === "coming_soon" && (
+                <div className="space-y-6 pb-10 text-charcoal">
+                  <div className="border-b border-sand/20 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl text-[#301C11] flex items-center gap-2">⏳ Coming Soon Page Customizer</h3>
+                      <p className="text-xs text-[#777] mt-1 font-sans">
+                        Modify text blocks, launch dates, countdown timer targets, and experiences on the Coming Soon launch page.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSaveHeader}
+                      className="bg-clay hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer w-fit font-bold"
+                    >
+                      Save Coming Soon Page
+                    </button>
+                  </div>
+
+                  {/* 1. Hero Cover fields */}
+                  <div className="bg-white p-5 border border-sand/15 rounded-[1px] space-y-4">
+                    <h4 className="text-sm font-semibold text-clay uppercase tracking-wider font-mono">1. Hero Cover Segment</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider">Eyebrow Caption</label>
+                        <input
+                          type="text"
+                          value={csHeroEyebrow}
+                          onChange={(e) => setCsHeroEyebrow(e.target.value)}
+                          className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs text-charcoal font-sans outline-clay"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider">Countdown Target Timestamp (ISO Format)</label>
+                        <input
+                          type="text"
+                          value={csTargetDate}
+                          onChange={(e) => setCsTargetDate(e.target.value)}
+                          className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs font-mono text-charcoal outline-clay"
+                          placeholder="YYYY-MM-DDTHH:MM:SS"
+                        />
+                        <span className="text-[10px] text-gray-400 mt-1 block">Specify target local time. Example: <code className="bg-sand/10 px-1">2026-09-01T10:00:00</code></span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider">Headline Title (HTML supported)</label>
+                      <input
+                        type="text"
+                        value={csHeroHeadline}
+                        onChange={(e) => setCsHeroHeadline(e.target.value)}
+                        className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs text-charcoal font-sans outline-clay"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider">Hero Subtitle Text</label>
+                      <textarea
+                        rows={3}
+                        value={csHeroSub}
+                        onChange={(e) => setCsHeroSub(e.target.value)}
+                        className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs text-charcoal font-sans outline-clay leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2. Experience Zones fields */}
+                  <div className="bg-white p-5 border border-sand/15 rounded-[1px] space-y-4">
+                    <h4 className="text-sm font-semibold text-clay uppercase tracking-wider font-mono">2. Experience Cards Segment</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider font-mono">Section Label</label>
+                        <input
+                          type="text"
+                          value={csSectionLabel}
+                          onChange={(e) => setCsSectionLabel(e.target.value)}
+                          className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs text-charcoal font-sans outline-clay"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider font-mono">Section Invitation Title</label>
+                        <input
+                          type="text"
+                          value={csSectionTitle}
+                          onChange={(e) => setCsSectionTitle(e.target.value)}
+                          className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs text-charcoal font-sans outline-clay"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card 1 & 2 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-sand/10 pt-4">
+                      <div className="p-3 bg-sand/5 border border-sand/10 rounded-[1px]">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-[#CB6A4A] font-semibold block mb-2">Card 01 Content</span>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={csExp1Title}
+                            onChange={(e) => setCsExp1Title(e.target.value)}
+                            placeholder="Card 1 Title"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                          <textarea
+                            rows={2}
+                            value={csExp1Desc}
+                            onChange={(e) => setCsExp1Desc(e.target.value)}
+                            placeholder="Card 1 Description"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-sand/5 border border-sand/10 rounded-[1px]">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-[#CB6A4A] font-semibold block mb-2">Card 02 Content</span>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={csExp2Title}
+                            onChange={(e) => setCsExp2Title(e.target.value)}
+                            placeholder="Card 2 Title"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                          <textarea
+                            rows={2}
+                            value={csExp2Desc}
+                            onChange={(e) => setCsExp2Desc(e.target.value)}
+                            placeholder="Card 2 Description"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3 & 4 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-3 bg-sand/5 border border-sand/10 rounded-[1px]">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-[#CB6A4A] font-semibold block mb-2">Card 03 Content</span>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={csExp3Title}
+                            onChange={(e) => setCsExp3Title(e.target.value)}
+                            placeholder="Card 3 Title"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                          <textarea
+                            rows={2}
+                            value={csExp3Desc}
+                            onChange={(e) => setCsExp3Desc(e.target.value)}
+                            placeholder="Card 3 Description"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-sand/5 border border-sand/10 rounded-[1px]">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-[#CB6A4A] font-semibold block mb-2">Card 04 Content</span>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={csExp4Title}
+                            onChange={(e) => setCsExp4Title(e.target.value)}
+                            placeholder="Card 4 Title"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                          <textarea
+                            rows={2}
+                            value={csExp4Desc}
+                            onChange={(e) => setCsExp4Desc(e.target.value)}
+                            placeholder="Card 4 Description"
+                            className="w-full p-2 border border-sand/35 rounded-[1px] text-xs font-sans outline-clay"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Quote Wisdom Segment */}
+                  <div className="bg-white p-5 border border-sand/15 rounded-[1px] space-y-4">
+                    <h4 className="text-sm font-semibold text-clay uppercase tracking-wider font-mono">3. Quote block Segment</h4>
+                    <div>
+                      <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider">Spotlight Quote Wisdom Narrative</label>
+                      <textarea
+                        rows={3}
+                        value={csQuoteText}
+                        onChange={(e) => setCsQuoteText(e.target.value)}
+                        className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs text-charcoal font-sans outline-clay leading-relaxed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider">Wisdom Quote Attribution Title</label>
+                      <input
+                        type="text"
+                        value={csQuoteAttr}
+                        onChange={(e) => setCsQuoteAttr(e.target.value)}
+                        className="w-full mt-1.5 p-3 border border-sand/30 rounded-[1px] text-xs text-charcoal font-sans outline-clay"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* branding */}
               {activeTab === "branding" && (
                 <div className="space-y-6 pb-10">
@@ -2287,6 +2743,69 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                             className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
                           />
                         </div>
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">LinkedIn Profile URL</label>
+                          <input
+                            type="text"
+                            value={socialLinkedin}
+                            onChange={(e) => setSocialLinkedin(e.target.value)}
+                            placeholder="E.g. https://linkedin.com/company/afrobaobab"
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+
+                        {/* Additional Dynamic Social Media links */}
+                        <div className="border-t border-sand/10 pt-3 mt-3">
+                          <label className="block text-[10px] tracking-wider uppercase text-clay font-mono font-bold mb-2">Other Social Media Accounts</label>
+                          
+                          {customSocials && customSocials.length > 0 && (
+                            <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                              {customSocials.map((social) => (
+                                <div key={social.id} className="flex items-center justify-between bg-charcoal/5 p-2 rounded border border-sand/15">
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] font-mono uppercase bg-clay/10 text-clay px-1.5 py-0.5 rounded mr-2 font-bold">{social.name}</span>
+                                    <span className="text-xs text-charcoal/80 truncate inline-block max-w-[200px] align-middle">{social.url}</span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleRemoveCustomSocial(social.id)}
+                                    className="p-1 text-charcoal/40 hover:text-red-600 transition-colors"
+                                    title="Delete custom platform connection"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-charcoal/5 p-3 rounded border border-sand/15">
+                            <div>
+                              <input
+                                type="text"
+                                value={newSocialName}
+                                onChange={(e) => setNewSocialName(e.target.value)}
+                                placeholder="Platform Name (e.g., Pinterest)"
+                                className="w-full bg-white border border-sand/40 px-2 py-1.5 text-xs text-charcoal rounded-[2px]"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={newSocialUrl}
+                                onChange={(e) => setNewSocialUrl(e.target.value)}
+                                placeholder="Link URL"
+                                className="w-full bg-white border border-sand/40 px-2 py-1.5 text-xs text-charcoal rounded-[2px]"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleAddCustomSocial}
+                                className="bg-[#cb6a4a] hover:bg-terracotta text-white font-mono text-xs px-3 rounded-[2px] transition-all"
+                              >
+                                Add
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -2369,6 +2888,146 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                     >
                       Save Configuration Settings
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* GALLERY CAROUSEL CONTROL PANEL */}
+              {activeTab === "gallery_carousel" && (
+                <div className="space-y-6">
+                  {/* Form to Create/Update Slides */}
+                  <form onSubmit={handleSaveCarousel} className="bg-white border border-sand/40 p-4 rounded-[2px] space-y-4">
+                    <h4 className="font-serif text-lg font-medium text-charcoal">
+                      {editingItemId ? "Edit Carousel Slide" : "+ Add New Carousel Slide"}
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                          Slide Title
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={csTitle}
+                          onChange={(e) => setCsTitle(e.target.value)}
+                          placeholder="E.g. Ancient Pottery Workshops"
+                          className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                          Slide Image URL / Asset Path
+                        </label>
+                        <div className="flex gap-2 items-start">
+                          <input
+                            type="text"
+                            required
+                            value={csImageUrl}
+                            onChange={(e) => setCsImageUrl(e.target.value)}
+                            placeholder="E.g. /uploads/gallery-xx.jpg or Unsplash URL"
+                            className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px] flex-1 min-w-0"
+                          />
+                          <FileInputButton onUploaded={setCsImageUrl} label="Upload" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                        Brief narrative / description
+                      </label>
+                      <textarea
+                        rows={2}
+                        required
+                        value={csDesc}
+                        onChange={(e) => setCsDesc(e.target.value)}
+                        placeholder="Say what this visual moment highlights..."
+                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2.5 pt-1">
+                      <button
+                        type="submit"
+                        className="bg-clay hover:bg-terracotta text-white font-mono uppercase tracking-widest text-xs px-6 py-2.5 rounded-[2px] transition-colors font-bold cursor-pointer"
+                      >
+                        {editingItemId ? "Apply Updates" : "Insert Slide"}
+                      </button>
+                      {editingItemId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingItemId(null);
+                            setCsTitle("");
+                            setCsDesc("");
+                            setCsImageUrl("");
+                          }}
+                          className="border border-sand/40 hover:bg-ivory/25 text-charcoal/70 font-mono uppercase tracking-widest text-xs px-6 py-2.5 rounded-[2px] transition-all cursor-pointer"
+                        >
+                          Cancel Editing
+                        </button>
+                      )}
+                    </div>
+                  </form>
+
+                  {/* Slides List Grid */}
+                  <div className="space-y-3">
+                    <h4 className="font-serif text-lg font-medium text-charcoal pb-1.5 border-b border-sand/20">
+                      Active Carousel Slides ({data?.carouselSlides?.length || 0})
+                    </h4>
+
+                    {(!data?.carouselSlides || data.carouselSlides.length === 0) ? (
+                      <p className="text-xs text-charcoal/50 italic py-4">
+                        No custom slides have been added yet. The default built-in slides list is currently active.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {data.carouselSlides.map((slide) => (
+                          <div key={slide.id} className="bg-white border border-sand/30 p-4 rounded-[2px] shadow-sm flex gap-4">
+                            <div className="w-24 h-16 bg-[#1b1510] border border-sand/25 rounded-[2px] overflow-hidden shrink-0 relative">
+                              <img
+                                src={slide.imageUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=120&q=80"}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <h5 className="font-sans font-semibold text-charcoal text-xs truncate">
+                                {slide.title}
+                              </h5>
+                              <p className="text-[11px] text-charcoal/60 line-clamp-2 leading-relaxed">
+                                {slide.desc}
+                              </p>
+                              <div className="flex items-center gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingItemId(slide.id);
+                                    setCsTitle(slide.title);
+                                    setCsDesc(slide.desc);
+                                    setCsImageUrl(slide.imageUrl || "");
+                                    scrollToFormTop();
+                                  }}
+                                  className="text-[10px] text-clay hover:opacity-85 font-mono uppercase tracking-widest font-bold flex items-center gap-0.5 cursor-pointer"
+                                >
+                                  <Edit3 className="w-3 h-3" /> Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCarousel(slide.id)}
+                                  className="text-[10px] text-red-600 hover:text-red-700 font-mono uppercase tracking-widest font-bold flex items-center gap-0.5 cursor-pointer ml-auto"
+                                >
+                                  <Trash2 className="w-3 h-3" /> Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -2492,6 +3151,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                                     setExpDesc(exp.description);
                                     setExpNum(exp.number);
                                     setExpImageUrl(exp.imageUrl || "");
+                                    scrollToFormTop();
                                   }}
                                   className="text-charcoal/40 hover:text-clay transition-colors cursor-pointer"
                                 >
@@ -2677,6 +3337,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                                 setExhStatus(exh.status);
                                 setExhIsNow(exh.isNow);
                                 setExhImageUrl(exh.imageUrl || "");
+                                scrollToFormTop();
                               }}
                               className="text-charcoal/40 hover:text-clay transition-colors cursor-pointer"
                             >
@@ -2890,6 +3551,7 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                                   setEvAudience(ev.audience);
                                   setEvTheme(ev.theme);
                                   setEvImageUrl(ev.imageUrl || "");
+                                  scrollToFormTop();
                                 }}
                                 className="text-white bg-black/40 hover:bg-black/60 p-1.5 rounded-full transition-colors cursor-pointer"
                               >
@@ -3010,6 +3672,359 @@ export default function CmsDashboard({ isOpen, onClose, data, onRefresh }: CmsDa
                         </div>
                       ))
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* pages */}
+              {activeTab === "pages" && (
+                <div className="space-y-6">
+                  {/* form */}
+                  <form onSubmit={handleSavePage} className="bg-white border border-sand/40 p-4 rounded-[2px] space-y-4">
+                    <h4 className="font-serif text-lg font-medium text-charcoal">
+                      {editingItemId ? "Edit Custom Page" : "+ Add New Custom Page"}
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                          Page Title
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={pageTitle}
+                          onChange={(e) => setPageTitle(e.target.value)}
+                          placeholder="E.g. VIP Tours"
+                          className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                          URL Slug (Lowercase & Hyphens)
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={pageSlug}
+                          onChange={(e) => setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))}
+                          placeholder="e.g. vip-tours"
+                          className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                        Page Markdown/Text Content
+                      </label>
+                      <textarea
+                        rows={8}
+                        required
+                        value={pageContent}
+                        onChange={(e) => setPageContent(e.target.value)}
+                        placeholder="Write dynamic content details with spacing..."
+                        className="w-full bg-ivory/30 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px] font-mono"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="pageShownInNavbar"
+                        checked={pageShownInNavbar}
+                        onChange={(e) => setPageShownInNavbar(e.target.checked)}
+                        className="rounded-[1px] border-sand text-clay focus:ring-clay"
+                      />
+                      <label htmlFor="pageShownInNavbar" className="text-xs text-charcoal/80 select-none cursor-pointer">
+                        Display this subpage link in the main navigation menu
+                      </label>
+                    </div>
+
+                    <div className="pt-2 flex gap-2">
+                      <button
+                        type="submit"
+                        className="bg-clay hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer font-bold"
+                      >
+                        {editingItemId ? "Apply Updates" : "Publish Subpage"}
+                      </button>
+                      {editingItemId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingItemId(null);
+                            setPageTitle("");
+                            setPageSlug("");
+                            setPageContent("");
+                            setPageShownInNavbar(true);
+                          }}
+                          className="border border-sand/60 text-charcoal/70 hover:bg-black/5 font-mono uppercase tracking-[0.05em] text-xs py-2 px-5 rounded-[2px] transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </form>
+
+                  {/* List of custom pages */}
+                  <div className="space-y-3">
+                    <h4 className="font-serif text-lg text-charcoal font-medium">
+                      Active Subpages ({data?.customPages?.length || 0})
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {(data?.customPages || []).map((page) => (
+                        <div key={page.id} className="p-4 bg-white border border-sand/30 rounded-[3px] flex flex-col justify-between shadow-xs">
+                          <div className="flex justify-between items-start gap-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-serif text-charcoal font-medium text-base">
+                                  {page.title}
+                                </span>
+                                <span className="text-[10px] font-mono text-clay">
+                                  /{page.slug}
+                                </span>
+                                {page.shownInNavbar && (
+                                  <span className="text-[8px] tracking-wider uppercase font-mono font-bold bg-moss/10 text-moss px-1.5 py-0.5 rounded-[1px]">
+                                    In Navigation
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-charcoal/60 text-xs leading-relaxed font-sans line-clamp-3">
+                                {page.content}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                onClick={() => {
+                                  setEditingItemId(page.id);
+                                  setPageTitle(page.title);
+                                  setPageSlug(page.slug);
+                                  setPageContent(page.content);
+                                  setPageShownInNavbar(page.shownInNavbar);
+                                  scrollToFormTop();
+                                }}
+                                className="p-2 border border-sand/50 text-charcoal/40 hover:text-clay hover:border-clay/50 rounded-[2px] transition-all cursor-pointer"
+                                title="Edit page"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeletePage(page.id)}
+                                className="p-2 border border-red-100 text-[#d9534f] hover:bg-red-50 hover:border-red-400 rounded-[2px] transition-all cursor-pointer"
+                                title="Delete page"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* users */}
+              {activeTab === "users" && (
+                <div className="space-y-6">
+                  <div className="border-b border-sand/20 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl text-charcoal flex items-center gap-2">🔑 CMS Access & User Administration</h3>
+                      <p className="text-xs text-[#777] mt-1 font-sans">
+                        Provision system access, manage personnel administrative roles (administrators and editors), and rotate console passwords.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* User Creation Form */}
+                    <div className="lg:col-span-1 bg-white border border-sand/30 p-5 rounded-[3px] shadow-sm space-y-4">
+                      <h4 className="font-mono text-xs uppercase tracking-wider text-clay font-bold border-b border-sand/15 pb-2">
+                        {editingUser ? "📝 Edit System Access" : "✨ Provision New Account"}
+                      </h4>
+                      <form onSubmit={handleSaveUserSubmit} className="space-y-4 font-sans">
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">Username</label>
+                          <input
+                            type="text"
+                            required
+                            value={newUsername}
+                            onChange={(e) => setNewUsername(e.target.value)}
+                            placeholder="E.g. sandra_art"
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">
+                            {editingUser ? "New Password (Leave Blank to Keep Same)" : "Login Password"}
+                          </label>
+                          <input
+                            type="password"
+                            required={!editingUser}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder={editingUser ? "••••••••" : "Require strong password"}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1 font-mono font-medium">System Role Delegation</label>
+                          <select
+                            value={newRole}
+                            onChange={(e) => {
+                              const role = e.target.value as "admin" | "editor";
+                              setNewRole(role);
+                              if (role === "admin") {
+                                setSelectedPermissions(["edit_content", "edit_carousel", "edit_events", "edit_bookings", "edit_custom_pages", "edit_users"]);
+                              } else {
+                                setSelectedPermissions(["edit_content"]);
+                              }
+                            }}
+                            className="w-full bg-ivory/35 border border-sand/50 px-3 py-2 text-xs text-charcoal rounded-[2px]"
+                          >
+                            <option value="editor">Editor (Can edit lists &amp; content only)</option>
+                            <option value="admin">Administrator (Root permissions)</option>
+                          </select>
+                        </div>
+
+                        {/* Granular Access Checkboxes */}
+                        <div className="space-y-2 border-t border-sand/15 pt-3">
+                          <label className="block text-[9px] tracking-widest uppercase text-charcoal/60 mb-1.5 font-mono font-semibold">
+                            Granular Access Safeguards & Scopes
+                          </label>
+
+                          <div className="space-y-1.5">
+                            {[
+                              { id: "edit_content", label: "Edit Main Brand Content & Headlines" },
+                              { id: "edit_carousel", label: "Manage Active Carousel Slides" },
+                              { id: "edit_events", label: "Edit Calendar Workshops & Events" },
+                              { id: "edit_bookings", label: "Access & Moderate Inquiry Bookings" },
+                              { id: "edit_custom_pages", label: "Publish/Modify Dynamic Custom Pages" },
+                              { id: "edit_users", label: "Administrative Personnel Privileges" }
+                            ].map((perm) => (
+                              <label key={perm.id} className="flex items-start gap-2 text-[11px] text-charcoal/70 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedPermissions.includes(perm.id)}
+                                  onChange={() => {
+                                    if (selectedPermissions.includes(perm.id)) {
+                                      setSelectedPermissions(selectedPermissions.filter(p => p !== perm.id));
+                                    } else {
+                                      setSelectedPermissions([...selectedPermissions, perm.id]);
+                                    }
+                                  }}
+                                  className="mt-0.5 rounded-[1px] border-sand text-clay focus:ring-clay"
+                                />
+                                <span>{perm.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                          <p className="text-[9px] text-[#888] italic">Note: Administrators override restricted editor access blocks.</p>
+                        </div>
+
+                        <div className="pt-2 flex gap-2">
+                          <button
+                            type="submit"
+                            className="bg-[#cb6a4a] hover:bg-terracotta text-white font-mono uppercase tracking-[0.05em] text-xs py-2 px-4 rounded-[2px] transition-colors cursor-pointer flex-1 font-bold"
+                          >
+                            {editingUser ? "Apply Changes" : "Create Account"}
+                          </button>
+                          {editingUser && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingUser(null);
+                                setNewUsername("");
+                                setNewPassword("");
+                                setNewRole("editor");
+                                setSelectedPermissions(["edit_content"]);
+                              }}
+                              className="border border-sand/60 text-charcoal/70 hover:bg-black/5 font-mono uppercase tracking-[0.05em] text-xs py-2 px-4 rounded-[2px] transition-colors cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
+                      </form>
+                    </div>
+
+                    {/* Users list roster */}
+                    <div className="lg:col-span-2 space-y-3">
+                      <h4 className="font-mono text-[10px] uppercase tracking-wider text-charcoal/60 font-semibold mb-2">Active CMS Administrative Group</h4>
+                      
+                      {users.length === 0 ? (
+                        <div className="text-center py-10 bg-white border border-sand/20 rounded-[2px]">
+                          <p className="text-sm text-charcoal/40 font-serif">Loading rosters...</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {users.map((u) => (
+                            <div key={u.id} className="p-4 bg-white border border-sand/30 rounded-[3px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                              <div className="space-y-1.5 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-serif text-charcoal font-medium text-base">{u.username}</span>
+                                  <span className={`text-[8px] font-mono tracking-widest uppercase font-bold text-white px-1.5 py-0.5 rounded-[2px] ${
+                                    u.role === "admin" ? "bg-[#cb6a4a]" : "bg-moss"
+                                  }`}>
+                                    {u.role}
+                                  </span>
+                                </div>
+
+                                {/* Permissions Badges */}
+                                <div className="flex flex-wrap gap-1">
+                                  {(!u.permissions || u.permissions.length === 0) ? (
+                                    <span className="text-[9px] bg-[#eee] text-[#777] px-1.5 py-0.5 rounded-[1px] font-mono">No Custom Scopes Assigned</span>
+                                  ) : (
+                                    u.permissions.map((p) => (
+                                      <span key={p} className="text-[9px] bg-ivory text-charcoal/70 border border-sand/30 px-1.5 py-0.5 rounded-[1px] font-mono">
+                                        ✦ {
+                                          p === "edit_content" ? "Main Brand" :
+                                          p === "edit_carousel" ? "Carousel Mgr" :
+                                          p === "edit_events" ? "Events Mgr" :
+                                          p === "edit_bookings" ? "Booking Desk" :
+                                          p === "edit_custom_pages" ? "Custom Pages" :
+                                          p === "edit_users" ? "Admin Staff" : p
+                                        }
+                                      </span>
+                                    ))
+                                  )}
+                                </div>
+
+                                <div className="text-[9px] text-[#777] font-sans">
+                                  Access provisioned on: {new Date(u.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 font-mono text-[10px] sm:shrink-0 justify-end">
+                                <button
+                                  onClick={() => {
+                                    setEditingUser(u);
+                                    setNewUsername(u.username);
+                                    setNewPassword("");
+                                    setNewRole(u.role);
+                                    setSelectedPermissions(u.permissions || ["edit_content"]);
+                                  }}
+                                  className="px-2.5 py-1 rounded-[2px] border border-sand/60 text-charcoal/60 hover:bg-charcoal/5 transition-all text-[9px] uppercase tracking-wider font-bold cursor-pointer"
+                                >
+                                  Edit Access
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteUserClick(u.id)}
+                                  className="p-1 px-2 border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-400 rounded-[2px] transition-colors cursor-pointer"
+                                  title="Delete User"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

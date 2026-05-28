@@ -1,4 +1,4 @@
-import { CmsData, Experience, Exhibition, EventItem, Booking, CmsHeader, CustomPage } from "../types";
+import { CmsData, Experience, Exhibition, EventItem, Booking, CmsHeader, CustomPage, CmsUser, CarouselSlide } from "../types";
 
 const SEED_DATA: CmsData = {
   header: {
@@ -26,8 +26,8 @@ const SEED_DATA: CmsData = {
     logoTextPrimary: "AFRO",
     logoTextSecondary: "BAOBAB",
     logoSub: "CULTURAL HUB & ART GALLERY",
-    logoMode: "default-emblem",
-    logoImageUrl: "",
+    logoMode: "image-url",
+    logoImageUrl: "/uploads/primary_logo_10.png",
     logoEmblemColor: "#CB6A4A",
     navbarLogoPosition: "left",
 
@@ -81,7 +81,25 @@ const SEED_DATA: CmsData = {
     showEvents: true,
     eventsLabel: "Upcoming Sessions",
     eventsTitle: "What's <span class=\"text-clay italic\">On</span>",
-    eventsSubTitle: "Reserve your spot in our upcoming heritage sessions, rhythm circles, and family celebrations."
+    eventsSubTitle: "Reserve your spot in our upcoming heritage sessions, rhythm circles, and family celebrations.",
+
+    // Default Coming Soon Customization
+    csHeroEyebrow: "Dubai · Opening September 2026",
+    csHeroHeadline: "Where culture becomes<br><em>something you feel</em>",
+    csHeroSub: "An immersive cultural hub designed for curiosity, creativity, and human connection — through storytelling, rhythm, movement, and shared experience.",
+    csTargetDate: "2026-09-01T10:00:00",
+    csSectionLabel: "What awaits you",
+    csSectionTitle: "A living space where culture is experienced, not observed",
+    csExp1Title: "Storytelling & Exhibitions",
+    csExp1Desc: "Rotating cultural exhibitions and immersive storytelling environments that invite participation and emotional discovery.",
+    csExp2Title: "Rhythm & Movement",
+    csExp2Desc: "Live drumming, music, and movement experiences that connect through sound and shared physical expression.",
+    csExp3Title: "Creative Workshops",
+    csExp3Desc: "Hands-on experiences in mask-making, jewellery, visual arts, poetry, and cultural craft — for all ages and backgrounds.",
+    csExp4Title: "Connection & Community",
+    csExp4Desc: "Gatherings, corporate experiences, school programmes, and cultural events designed to bridge backgrounds and generations.",
+    csQuoteText: "Some experiences are remembered because they are seen. Others are remembered because they are felt. This is the kind of space we are building.",
+    csQuoteAttr: "The Afro Baobab Vision"
   },
   experiences: [
     {
@@ -465,6 +483,63 @@ export async function deleteCmsEvent(id: string): Promise<{ success: boolean }> 
   return { success: true };
 }
 
+// Carousel Slides CRUD
+export async function saveCmsCarousel(id: string | null, data: Partial<CarouselSlide>): Promise<{ success: boolean; item: CarouselSlide }> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const url = id ? `/api/cms/carousel/${id}` : "/api/cms/carousel";
+      const method = id ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("Server save carousel slide failed, doing local", e);
+    }
+  }
+
+  const db = getLocalDb();
+  if (!db.carouselSlides) db.carouselSlides = [];
+  if (id) {
+    const idx = db.carouselSlides.findIndex(x => x.id === id);
+    if (idx !== -1) {
+      db.carouselSlides[idx] = { ...db.carouselSlides[idx], ...data };
+      saveLocalDb(db);
+      return { success: true, item: db.carouselSlides[idx] };
+    }
+  }
+  const newItem: CarouselSlide = {
+    id: "slide-" + Date.now(),
+    imageUrl: data.imageUrl || "",
+    title: data.title || "Untitled Carousel Slide",
+    desc: data.desc || ""
+  };
+  db.carouselSlides.push(newItem);
+  saveLocalDb(db);
+  return { success: true, item: newItem };
+}
+
+export async function deleteCmsCarousel(id: string): Promise<{ success: boolean }> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const res = await fetch(`/api/cms/carousel/${id}`, { method: "DELETE" });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("Server delete carousel slide failed, doing local", e);
+    }
+  }
+
+  const db = getLocalDb();
+  if (!db.carouselSlides) db.carouselSlides = [];
+  db.carouselSlides = db.carouselSlides.filter(x => x.id !== id);
+  saveLocalDb(db);
+  return { success: true };
+}
+
 // Inquiries / Bookings Submit/Update/Delete
 export async function saveCmsBooking(bookingData: Partial<Booking>): Promise<{ success: boolean; booking: Booking }> {
   const online = await isServerOnline();
@@ -625,6 +700,99 @@ export async function deleteCmsPage(id: string): Promise<{ success: boolean }> {
   const db = getLocalDb();
   if (!db.customPages) db.customPages = [];
   db.customPages = db.customPages.filter(p => p.id !== id);
+  saveLocalDb(db);
+  return { success: true };
+}
+
+// --- CMS Users Management APIs ---
+export async function getCmsUsers(): Promise<CmsUser[]> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const res = await fetch("/api/cms/users");
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("Server get users failed, falling back to local list", e);
+    }
+  }
+  const db = getLocalDb();
+  return db.users || [];
+}
+
+export async function saveCmsUser(id: string | null, userData: Partial<CmsUser>): Promise<{ success: boolean; user: CmsUser }> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const url = id ? `/api/cms/users/${id}` : "/api/cms/users";
+      const method = id ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      if (res.ok) return await res.json();
+      const err = await res.json();
+      throw new Error(err.error || "Failed to edit user");
+    } catch (e: any) {
+      console.warn("Server save user failure, doing local", e);
+      if (e.message && e.message.includes("already taken")) {
+        throw e;
+      }
+    }
+  }
+
+  const db = getLocalDb();
+  if (!db.users) db.users = [];
+
+  if (id) {
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx] = {
+        ...db.users[idx],
+        ...userData,
+      } as CmsUser;
+      saveLocalDb(db);
+      return { success: true, user: db.users[idx] };
+    }
+    throw new Error("Local user account mismatch");
+  } else {
+    const newUser: CmsUser = {
+      id: "user-" + Date.now(),
+      username: userData.username || "newuser",
+      password: userData.password || "password",
+      role: userData.role || "editor",
+      createdAt: new Date().toISOString()
+    };
+    db.users.push(newUser);
+    saveLocalDb(db);
+    return { success: true, user: newUser };
+  }
+}
+
+export async function deleteCmsUser(id: string): Promise<{ success: boolean }> {
+  const online = await isServerOnline();
+  if (online) {
+    try {
+      const res = await fetch(`/api/cms/users/${id}`, { method: "DELETE" });
+      if (res.ok) return await res.json();
+      const err = await res.json();
+      throw new Error(err.error || "Failed to remove user");
+    } catch (e: any) {
+      console.warn("Server delete user failure, doing local", e);
+      if (e.message && e.message.includes("last active admin")) {
+        throw e;
+      }
+    }
+  }
+
+  const db = getLocalDb();
+  if (!db.users) db.users = [];
+  const target = db.users.find(u => u.id === id);
+  if (target?.role === "admin" && db.users.filter(u => u.role === "admin").length <= 1) {
+    throw new Error("Cannot remove the last active admin account");
+  }
+
+  db.users = db.users.filter(u => u.id !== id);
   saveLocalDb(db);
   return { success: true };
 }

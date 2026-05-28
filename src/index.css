@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:ital,wght@0,200;0,300;0,400;0,500;0,600;1,200;1,300;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Jost', system-ui, -apple-system, sans-serif;
   
   --color-clay: #CB6A4A;
   --color-sand: #E7D6BA;
@@ -13,6 +13,18 @@
   --color-charcoal: #222222;
   --color-ivory: #F6F3EE;
   --color-warm-white: #FAF8F4;
+}
+
+/* Global Noise Texture Overlay for high-end organic brand feel */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 256px;
+  opacity: 0.38;
+  pointer-events: none;
+  z-index: 50;
 }
 
 /* Extra animations / utility styles matching original */

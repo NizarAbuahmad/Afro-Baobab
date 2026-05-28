@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
-import { CmsData } from "./src/types";
+import { CmsData, CarouselSlide } from "./src/types";
 
 const app = express();
 const PORT = 3000;
@@ -143,25 +143,147 @@ const SEED_DATA: CmsData = {
       status: "unread",
       timestamp: new Date().toISOString()
     }
+  ],
+  carouselSlides: [
+    {
+      id: "slide-1",
+      imageUrl: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1400&q=80",
+      title: "African Rhythms & Dance Performance",
+      desc: "Capturing the vibrant pulse of seasonal celebratory dance, rhythm loops, and performance art."
+    },
+    {
+      id: "slide-2",
+      imageUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=80",
+      title: "Interactive Drumming Circles",
+      desc: "Curated workshops teaching coordinating pulse, hand position, and tempo under our master percussion team."
+    },
+    {
+      id: "slide-3",
+      imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1400&q=80",
+      title: "Clay Pottery & Sculpting",
+      desc: "Moulding raw clay into symbolic traditional artifacts and geometrical vessel layouts."
+    },
+    {
+      id: "slide-4",
+      imageUrl: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1400&q=80",
+      title: "Intricate Sacred Bead Threading",
+      desc: "Participants explore symmetrical design and ethnic lore by assembling gorgeous glass beads."
+    },
+    {
+      id: "slide-5",
+      imageUrl: "https://images.unsplash.com/photo-1543731068-7e0f5beff43a?auto=format&fit=crop&w=1400&q=80",
+      title: "Authentic Djembe Courtyards",
+      desc: "Hundreds of hand-carved West African djembes lining our seasonal villa lawns in Dubai."
+    }
   ]
 };
 
 function getDb(): CmsData {
   try {
+    const defaultSchoolsPage = {
+      id: "page-schools",
+      slug: "schools",
+      title: "Schools",
+      content: "Welcome to the African Cultural Field Trip program at Afro Baobab Cultural Hub. Our curriculum-aligned, interactive modules are designed to spark wonder, curiosity, and cultural understanding in students of all age groups.\n\n🎒 WHAT STUDENTS WILL EXPERIENCE:\n• Under the Story Canopy: Hands-on oral history narratives under our giant woven baobab tree, incorporating immersive audio, lighting and live dramatic interaction.\n• Rhythm and Drums: Practical djembe drum circles teaching alignment, coordination, and community pulse led by master rhythmic musicians.\n• Creative Clay & Beading: Craft workshops where pupils mould artifacts or construct tribal patterns using traditional beads, teaching geometric layout and history.\n• Interactive Exhibition Tour: Guided walks around our active historical visual galleries, tailored to schools' specific regional curriculums.\n\n🏫 CURRICULUM SYNDICATION:\nWe cater to IB, British, American, CBSE, and MOE frameworks.\n\n📋 BOOKING LOGISTICS:\n• Timings: Morning sessions available from 9:00 AM – 1:00 PM.\n• Group Size: Accommodating up to 60 students per flight.\n\n✉️ FIELD TRIP INQUIRIES:\nPlease use our Guest Inquiries section below or click Booking in the navigation bar to submit a reservation enquiry.",
+      shownInNavbar: true,
+      createdAt: new Date().toISOString()
+    };
+
+    const defaultCorporatePage = {
+      id: "page-corporates",
+      slug: "corporate",
+      title: "Corporate",
+      content: "Cultivate teamwork, ignite artistic inspiration, and expand cross-cultural intelligence with Afro Baobab's bespoke Corporate Experience Programs in Dubai.\n\n👔 EXECUTIVE & DIVISIONAL TEAM EXPERIENCES:\n• Creative Rhythm Circles: Highly active djembe drum alignment workshops. Experience group resonance, cooperative communication, and synergistic pulse.\n• Shared Visual Tapestry: Collaborative painting and bead weaving modules where team participants work on a single massive canvas.\n• Cross-Cultural Leadership & CQ: Seminars focusing on narrative leadership and adapting them to complex modern organizational strategy.\n• Gourmet Afro-Fusion Dinners: Fine-art culinary journeys featuring traditional communal sharing plates, live music accompaniment, and coffee roast presentations.\n\n🛎️ TEAM EVENT LOGISTICS:\n• Exclusive Venue Buyout: Private access to our art gallery, meeting salon, and storytelling room.\n\n✉️ COLLABORATION REQUESTS:\nPlease declare your team objectives by tapping Booking in our navigation menu.",
+      shownInNavbar: true,
+      createdAt: new Date().toISOString()
+    };
+
+    const defaultUser = {
+      id: "u-admin",
+      username: "admin",
+      password: "admin",
+      role: "admin" as const,
+      createdAt: new Date().toISOString()
+    };
+
+    const defaultCarouselSlides: CarouselSlide[] = [
+      {
+        id: "slide-1",
+        imageUrl: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1400&q=80",
+        title: "African Rhythms & Dance Performance",
+        desc: "Capturing the vibrant pulse of seasonal celebratory dance, rhythm loops, and performance art."
+      },
+      {
+        id: "slide-2",
+        imageUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=80",
+        title: "Interactive Drumming Circles",
+        desc: "Curated workshops teaching coordinating pulse, hand position, and tempo under our master percussion team."
+      },
+      {
+        id: "slide-3",
+        imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1400&q=80",
+        title: "Clay Pottery & Sculpting",
+        desc: "Moulding raw clay into symbolic traditional artifacts and geometrical vessel layouts."
+      },
+      {
+        id: "slide-4",
+        imageUrl: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1400&q=80",
+        title: "Intricate Sacred Bead Threading",
+        desc: "Participants explore symmetrical design and ethnic lore by assembling gorgeous glass beads."
+      },
+      {
+        id: "slide-5",
+        imageUrl: "https://images.unsplash.com/photo-1543731068-7e0f5beff43a?auto=format&fit=crop&w=1400&q=80",
+        title: "Authentic Djembe Courtyards",
+        desc: "Hundreds of hand-carved West African djembes lining our seasonal villa lawns in Dubai."
+      }
+    ];
+
     if (!fs.existsSync(DB_PATH)) {
-      const initial = { ...SEED_DATA, customPages: [] };
+      const initial = { 
+        ...SEED_DATA, 
+        customPages: [defaultSchoolsPage, defaultCorporatePage],
+        users: [defaultUser],
+        carouselSlides: defaultCarouselSlides
+      };
       fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2), "utf8");
       return initial;
     }
     const data = fs.readFileSync(DB_PATH, "utf8");
     const parsed = JSON.parse(data);
-    if (!parsed.customPages) {
-      parsed.customPages = [];
+    
+    // Ensure lists exist
+    if (!parsed.customPages || parsed.customPages.length === 0) {
+      parsed.customPages = [defaultSchoolsPage, defaultCorporatePage];
+    } else {
+      parsed.customPages.forEach((p: any) => {
+        if (p.id === "page-schools" || p.slug === "schools-field-trips") {
+          p.title = "Schools";
+          p.slug = "schools";
+        }
+        if (p.id === "page-[#page-schools]" || p.id === "schools" || p.slug === "schools") {
+          p.title = "Schools";
+          p.slug = "schools";
+        }
+        if (p.id === "page-corporates" || p.slug === "corporate-experiences") {
+          p.title = "Corporate";
+          p.slug = "corporate";
+        }
+      });
+      // Save changes back if migrated dynamically
+      fs.writeFileSync(DB_PATH, JSON.stringify(parsed, null, 2), "utf8");
+    }
+    if (!parsed.users || parsed.users.length === 0) {
+      parsed.users = [defaultUser];
+    }
+    if (!parsed.carouselSlides || parsed.carouselSlides.length === 0) {
+      parsed.carouselSlides = defaultCarouselSlides;
+      fs.writeFileSync(DB_PATH, JSON.stringify(parsed, null, 2), "utf8");
     }
     return parsed;
   } catch (error) {
     console.error("Error reading database", error);
-    return { ...SEED_DATA, customPages: [] };
+    return { ...SEED_DATA, customPages: [], users: [] };
   }
 }
 
@@ -169,6 +291,9 @@ function writeDb(data: CmsData) {
   try {
     if (!data.customPages) {
       data.customPages = [];
+    }
+    if (!data.users) {
+      data.users = [];
     }
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf8");
   } catch (error) {
@@ -295,6 +420,42 @@ app.delete("/api/cms/experiences/:id", (req, res) => {
   res.json({ success: true });
 });
 
+// Carousel Slides CRUD
+app.post("/api/cms/carousel", (req, res) => {
+  const db = getDb();
+  if (!db.carouselSlides) db.carouselSlides = [];
+  const newItem = {
+    id: "slide-" + Date.now(),
+    imageUrl: req.body.imageUrl || "",
+    title: req.body.title || "Untitled Carousel Slide",
+    desc: req.body.desc || ""
+  };
+  db.carouselSlides.push(newItem);
+  writeDb(db);
+  res.json({ success: true, item: newItem });
+});
+
+app.put("/api/cms/carousel/:id", (req, res) => {
+  const db = getDb();
+  if (!db.carouselSlides) db.carouselSlides = [];
+  const index = db.carouselSlides.findIndex(x => x.id === req.params.id);
+  if (index !== -1) {
+    db.carouselSlides[index] = { ...db.carouselSlides[index], ...req.body };
+    writeDb(db);
+    res.json({ success: true, item: db.carouselSlides[index] });
+  } else {
+    res.status(404).json({ error: "Not found" });
+  }
+});
+
+app.delete("/api/cms/carousel/:id", (req, res) => {
+  const db = getDb();
+  if (!db.carouselSlides) db.carouselSlides = [];
+  db.carouselSlides = db.carouselSlides.filter(x => x.id !== req.params.id);
+  writeDb(db);
+  res.json({ success: true });
+});
+
 // Exhibitions CRUD
 app.post("/api/cms/exhibitions", (req, res) => {
   const db = getDb();
@@ -404,14 +565,127 @@ app.delete("/api/cms/bookings/:id", (req, res) => {
   res.json({ success: true });
 });
 
+// --- Dynamic CMS User Management Endpoints ---
+app.get("/api/cms/users", (req, res) => {
+  const db = getDb();
+  const users = db.users || [];
+  // Exclude password in dynamic client lists if wanted, or return clean
+  res.json(users);
+});
+
+app.post("/api/cms/users", (req, res) => {
+  const db = getDb();
+  if (!db.users) db.users = [];
+  const { username, password, role, permissions } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required" });
+  }
+  
+  const duplicate = db.users.some(u => u.username.toLowerCase() === username.toLowerCase());
+  if (duplicate) {
+    return res.status(400).json({ error: "Username is already taken" });
+  }
+
+  const newUser = {
+    id: "user-" + Date.now() + "-" + Math.round(Math.random() * 1000),
+    username,
+    password,
+    role: role || "editor",
+    permissions: permissions || ["edit_content"],
+    createdAt: new Date().toISOString()
+  };
+
+  db.users.push(newUser);
+  writeDb(db);
+  res.json({ success: true, user: newUser });
+});
+
+app.put("/api/cms/users/:id", (req, res) => {
+  const db = getDb();
+  if (!db.users) db.users = [];
+  const idx = db.users.findIndex(u => u.id === req.params.id);
+  if (idx === -1) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const { username, password, role, permissions } = req.body;
+  
+  if (username) {
+    const duplicate = db.users.some(u => u.id !== req.params.id && u.username.toLowerCase() === username.toLowerCase());
+    if (duplicate) {
+      return res.status(400).json({ error: "Username is already taken" });
+    }
+    db.users[idx].username = username;
+  }
+
+  if (password) {
+    db.users[idx].password = password;
+  }
+
+  if (role) {
+    db.users[idx].role = role;
+  }
+
+  if (permissions) {
+    db.users[idx].permissions = permissions;
+  }
+
+  writeDb(db);
+  res.json({ success: true, user: db.users[idx] });
+});
+
+app.delete("/api/cms/users/:id", (req, res) => {
+  const db = getDb();
+  if (!db.users) db.users = [];
+  const targetIdx = db.users.findIndex(u => u.id === req.params.id);
+  if (targetIdx === -1) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const targetUser = db.users[targetIdx];
+  const adminCount = db.users.filter(u => u.role === "admin").length;
+
+  if (targetUser.role === "admin" && adminCount <= 1) {
+    return res.status(400).json({ error: "Cannot remove the last active admin account" });
+  }
+
+  db.users = db.users.filter(u => u.id !== req.params.id);
+  writeDb(db);
+  res.json({ success: true });
+});
+
 // Admin Auth
 app.post("/api/cms/login", (req, res) => {
   const { username, password } = req.body;
-  // Fallback credentials
-  if (username === "admin" && password === "admin") {
-    res.json({ success: true, token: "afro-baobab-auth-session" });
+  const db = getDb();
+  if (!db.users) db.users = [];
+
+  const matchedUser = db.users.find(
+    u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+  );
+
+  if (matchedUser) {
+    res.json({ 
+      success: true, 
+      token: "afro-baobab-auth-session",
+      user: {
+        id: matchedUser.id,
+        username: matchedUser.username,
+        role: matchedUser.role
+      }
+    });
   } else {
-    res.status(401).json({ success: false, error: "Incorrect username or password" });
+    // Also support fallback hardcoded if db.users got entirely corrupted
+    if (username === "admin" && password === "admin") {
+      res.json({ 
+        success: true, 
+        token: "afro-baobab-auth-session",
+        user: { id: "u-admin", username: "admin", role: "admin" }
+      });
+    } else {
+      res.status(401).json({ success: false, error: "Incorrect username or password" });
+    }
   }
 });
 

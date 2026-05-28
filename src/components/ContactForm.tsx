@@ -78,7 +78,7 @@ export default function ContactForm({ isOpen, onClose, defaultType = 'general', 
             <div>
               <div className="label">Custom Experience</div>
               <h3 className="font-serif text-3xl font-light text-charcoal tracking-tight">
-                Plan a <em>Visit</em>
+                Book an <em>Experience</em>
               </h3>
               <p className="text-xs text-[#777] mt-1 leading-relaxed font-sans">
                 Tell us about your ideal day, group size, and specific requirements. We will tailor an immersive session matching your objectives.

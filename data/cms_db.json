@@ -1,0 +1,160 @@
+{
+  "header": {
+    "heroTitle": "Deep Roots.<br><em>Open Horizons.</em>",
+    "heroSub": "An immersive destination in Dubai where exhibitions, storytelling, rhythm, movement, art, and shared experience come together. A space to learn, create, connect, and belong.",
+    "tickerItems": [
+      "Exhibitions",
+      "Storytelling Nights",
+      "Rhythm & Movement",
+      "Cultural Workshops",
+      "School Visits",
+      "Corporate Experiences",
+      "Art & Craft",
+      "Family Days",
+      "Cultural Dining",
+      "Private Events"
+    ],
+    "footerDesc": "An immersive cultural destination bringing people together through exhibitions, storytelling, creativity, movement, and shared experience.",
+    "footerTagline": "Experience. Connect. Belong.",
+    "audioUrl": "",
+    "audioTitle": "None",
+    "audioAutoplay": false,
+    "logoMode": "image-url",
+    "logoImageUrl": "/uploads/primary_logo_10.png"
+  },
+  "experiences": [
+    {
+      "id": "exp-1",
+      "number": "01",
+      "title": "Gallery & Rotating Exhibitions",
+      "description": "Immersive cultural exhibitions that rotate seasonally, bringing new stories and perspectives from across the world."
+    },
+    {
+      "id": "exp-2",
+      "number": "02",
+      "title": "Storytelling Experiences",
+      "description": "Live storytelling sessions that bring ancient and contemporary narratives to life through voice, movement, and light."
+    },
+    {
+      "id": "exp-3",
+      "number": "03",
+      "title": "Rhythm, Music & Movement",
+      "description": "Drumming circles, dance workshops, and rhythmic experiences that connect body and culture in joyful participation."
+    },
+    {
+      "id": "exp-4",
+      "number": "04",
+      "title": "Art & Craft Workshops",
+      "description": "Hands-on creative sessions where participants make, shape, and express through cultural craft traditions."
+    },
+    {
+      "id": "exp-5",
+      "number": "05",
+      "title": "Cultural Dining & Café",
+      "description": "A curated café space where food becomes storytelling — flavours, aromas, and gatherings inspired by global cultures."
+    },
+    {
+      "id": "exp-6",
+      "number": "06",
+      "title": "Evening Events & Performances",
+      "description": "Curated evenings of music, spoken word, cultural film, and collaborative performances for all audiences."
+    }
+  ],
+  "exhibitions": [
+    {
+      "id": "exh-1",
+      "badge": "I",
+      "title": "Roots & Routes — African Migration Stories",
+      "type": "Photography · Installation · Oral History",
+      "status": "Now",
+      "isNow": true
+    },
+    {
+      "id": "exh-2",
+      "badge": "II",
+      "title": "The Rhythm of Making — Craft & Identity",
+      "type": "Textile · Ceramics · Workshop",
+      "status": "Jun 2025",
+      "isNow": false
+    },
+    {
+      "id": "exh-3",
+      "badge": "III",
+      "title": "Crossing Worlds — Global Cultural Dialogues",
+      "type": "Multi-cultural · Interactive · Immersive",
+      "status": "Sep 2025",
+      "isNow": false
+    }
+  ],
+  "events": [
+    {
+      "id": "ev-1",
+      "day": "24",
+      "month": "May",
+      "category": "Evening Event",
+      "title": "Rhythms of Us — A Night of Music & Storytelling",
+      "time": "7:00 PM",
+      "audience": "All Welcome",
+      "theme": "clay"
+    },
+    {
+      "id": "ev-2",
+      "day": "01",
+      "month": "Jun",
+      "category": "Workshop",
+      "title": "Weaving Words — Textile Art & Cultural Stories",
+      "time": "10:00 AM",
+      "audience": "Families",
+      "theme": "moss"
+    },
+    {
+      "id": "ev-3",
+      "day": "08",
+      "month": "Jun",
+      "category": "Cultural Talk",
+      "title": "Identity & Expression — A Cross-Cultural Dialogue",
+      "time": "6:30 PM",
+      "audience": "Adults",
+      "theme": "indigo"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "bk-1",
+      "name": "GEMS World Academy",
+      "email": "fieldtrips@gems.com",
+      "phone": "+971 4 400 0000",
+      "type": "school",
+      "notes": "Requesting space for 45 pupils for rhythm and exhibition zones on Jun 15th.",
+      "status": "unread",
+      "timestamp": "2026-05-27T18:39:14.528Z"
+    }
+  ],
+  "customPages": [
+    {
+      "id": "page-schools",
+      "slug": "schools",
+      "title": "Schools",
+      "content": "Welcome to the African Cultural Field Trip program at Afro Baobab Cultural Hub. Our curriculum-aligned, interactive modules are designed to spark wonder, curiosity, and cultural understanding in students of all age groups.\n\n🎒 WHAT STUDENTS WILL EXPERIENCE:\n• Under the Story Canopy: Hands-on oral history narratives under our giant woven baobab tree, incorporating immersive audio, lighting and live dramatic interaction.\n• Rhythm and Drums: Practical djembe drum circles teaching alignment, coordination, and community pulse led by master rhythmic musicians.\n• Creative Clay & Beading: Craft workshops where pupils mould artifacts or construct tribal patterns using traditional beads, teaching geometric layout and history.\n• Interactive Exhibition Tour: Guided walks around our active historical visual galleries, tailored to schools' specific regional curriculums.\n\n🏫 CURRICULUM SYNDICATION:\nWe cater to IB, British, American, CBSE, and MOE frameworks.\n\n📋 BOOKING LOGISTICS:\n• Timings: Morning sessions available from 9:00 AM – 1:00 PM.\n• Group Size: Accommodating up to 60 students per flight.\n\n✉️ FIELD TRIP INQUIRIES:\nPlease use our Guest Inquiries section below or click Booking in the navigation bar to submit a reservation enquiry.",
+      "shownInNavbar": true,
+      "createdAt": "2026-05-27T18:39:19.134Z"
+    },
+    {
+      "id": "page-corporates",
+      "slug": "corporate",
+      "title": "Corporate",
+      "content": "Cultivate teamwork, ignite artistic inspiration, and expand cross-cultural intelligence with Afro Baobab's bespoke Corporate Experience Programs in Dubai.\n\n👔 EXECUTIVE & DIVISIONAL TEAM EXPERIENCES:\n• Creative Rhythm Circles: Highly active djembe drum alignment workshops. Experience group resonance, cooperative communication, and synergistic pulse.\n• Shared Visual Tapestry: Collaborative painting and bead weaving modules where team participants work on a single massive canvas.\n• Cross-Cultural Leadership & CQ: Seminars focusing on narrative leadership and adapting them to complex modern organizational strategy.\n• Gourmet Afro-Fusion Dinners: Fine-art culinary journeys featuring traditional communal sharing plates, live music accompaniment, and coffee roast presentations.\n\n🛎️ TEAM EVENT LOGISTICS:\n• Exclusive Venue Buyout: Private access to our art gallery, meeting salon, and storytelling room.\n\n✉️ COLLABORATION REQUESTS:\nPlease declare your team objectives by tapping Booking in our navigation menu.",
+      "shownInNavbar": true,
+      "createdAt": "2026-05-27T18:39:19.134Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "u-admin",
+      "username": "admin",
+      "password": "admin",
+      "role": "admin",
+      "createdAt": "2026-05-27T18:39:19.134Z"
+    }
+  ]
+}

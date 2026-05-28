@@ -1,4 +1,4 @@
-import { ReactNode, CSSProperties } from "react";
+import { ReactNode, CSSProperties, useState, useEffect } from "react";
 
 interface LogoProps {
   className?: string;
@@ -40,19 +40,51 @@ export default function AfroBaobabLogo({
   const isDefaultPrimary = primaryText.toUpperCase() === "AFRO";
   const isDefaultSecondary = secondaryText.toUpperCase() === "BAOBAB";
 
+  // State to cycle through possible custom logo formats
+  const [triedImgIndex, setTriedImgIndex] = useState(0);
+  const [useSvgFallback, setUseSvgFallback] = useState(false);
+
+  // Define candidate names for the logo to support uploaded formats of "primary logo 10"
+  const candidates: string[] = [];
+  if (logoImageUrl) {
+    candidates.push(logoImageUrl);
+  }
+  // Robust list of user logo variants to check in sequence
+  candidates.push("/uploads/primary_logo_10.png");
+  candidates.push("/uploads/primary-logo-10.png");
+  candidates.push("/uploads/primary logo 10.png");
+  candidates.push("/uploads/primary_logo_10.jpg");
+  candidates.push("/uploads/primary-logo-10.jpg");
+  candidates.push("/uploads/primary logo 10.jpg");
+  candidates.push("/uploads/primary_logo_10.jpeg");
+  candidates.push("/uploads/primary-logo-10.jpeg");
+  candidates.push("/uploads/primary logo 10.jpeg");
+
+  const uniqueCandidates = Array.from(new Set(candidates)).filter(Boolean);
+
+  // Reset fallback logic when logoImageUrl changes
+  useEffect(() => {
+    setTriedImgIndex(0);
+    setUseSvgFallback(false);
+  }, [logoImageUrl]);
+
   // Beautifully and precisely rendered SVG path reproducing the custom human-baobab emblem
   const renderEmblem = (sizeClass: string, extraStyle?: CSSProperties) => {
-    if (mode === "image-url" && logoImageUrl) {
+    if (mode === "image-url" && uniqueCandidates.length > 0 && !useSvgFallback) {
+      const currentSrc = uniqueCandidates[triedImgIndex];
       return (
         <img
-          src={logoImageUrl}
+          src={currentSrc}
           alt="Afro Baobab Brand Logo"
           className={`${sizeClass} ${iconClassName} object-contain shrink-0`}
           style={extraStyle}
           referrerPolicy="no-referrer"
-          onError={(e) => {
-            // Fallback back to emblem on error
-            (e.currentTarget as HTMLImageElement).style.display = "none";
+          onError={() => {
+            if (triedImgIndex < uniqueCandidates.length - 1) {
+              setTriedImgIndex((prev) => prev + 1);
+            } else {
+              setUseSvgFallback(true);
+            }
           }}
         />
       );

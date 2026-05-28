@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Sparkles, Calendar, BookOpen, Clock, Heart, Users, ArrowUpRight, CheckCircle2, X, Music, Volume2, VolumeX, Play, Pause, MessageCircle } from "lucide-react";
+import { Sparkles, Calendar, BookOpen, Clock, Heart, Users, ArrowUpRight, CheckCircle2, X, Music, Volume2, VolumeX, Play, Pause, MessageCircle, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CmsData, Exhibition, CustomPage } from "./types";
 import Navbar from "./components/Navbar";
@@ -7,6 +7,8 @@ import CmsDashboard from "./components/CmsDashboard";
 import ContactForm from "./components/ContactForm";
 import HeritageMotifs from "./components/HeritageMotifs";
 import AfroBaobabLogo from "./components/AfroBaobabLogo";
+import GalleryCarousel from "./components/GalleryCarousel";
+import ComingSoonBaobabPage from "./components/ComingSoonBaobabPage";
 import { getCmsAll } from "./lib/cmsClient";
 
 // Reusable elegant tribal geometric separator to enrich spacing and design focus
@@ -26,45 +28,9 @@ const TribalDivider = ({ light = false }: { light?: boolean }) => (
   </div>
 );
 
-const PROVERBS = [
-  {
-    quote: "Rain beats a leopard's skin, but it does not wash out the spots.",
-    meaning: "Your true heritage and values remain resilient through all storms of life.",
-    origin: "Asante Traditional Wisdom",
-    tag: "Resilience"
-  },
-  {
-    quote: "If you want to go fast, go alone. If you want to go far, go together.",
-    meaning: "Collaborative rhythm and shared heritage create enduring, grand journeys.",
-    origin: "East African Saying",
-    tag: "Unity"
-  },
-  {
-    quote: "It is not wrong to go back for that which you have forgotten.",
-    meaning: "Sankofa philosophy: True progress comes from honoring and learning from history.",
-    origin: "Akan Adinkra Philosophy",
-    tag: "Wisdom"
-  },
-  {
-    quote: "A giant Baobab tree grows from a tiny, fragile seed.",
-    meaning: "Patience and small incremental creations lead to magnificent community spaces.",
-    origin: "Traditional Sahelian Proverb",
-    tag: "Patience"
-  },
-  {
-    quote: "Earth is a beehive; we all enter through the same entrance.",
-    meaning: "Deep hospitality and open doors bind all human cultures together.",
-    origin: "Bantu Proverb",
-    tag: "Hospitality"
-  }
-];
-
 export default function App() {
   const [data, setData] = useState<CmsData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Proverb Spotlight state
-  const [proverbIndex, setProverbIndex] = useState(0);
 
   // Background Audio states & ref
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -74,7 +40,6 @@ export default function App() {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   // Guest visitor interactive hides (stored in component state, remembers visitor preference)
-  const [isProverbHiddenByVisitor, setIsProverbHiddenByVisitor] = useState(false);
   const [isMusicPlayerHiddenByVisitor, setIsMusicPlayerHiddenByVisitor] = useState(false);
 
   // Modals state
@@ -82,9 +47,63 @@ export default function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingType, setBookingType] = useState<'school' | 'corporate' | 'general'>('general');
   const [selectedCustomPage, setSelectedCustomPage] = useState<CustomPage | null>(null);
+  const [activePath, setActivePath] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.location.pathname;
+    }
+    return "/";
+  });
+
+  // Client-side router listening to popstate (back/forward)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handlePopState = () => {
+        setActivePath(window.location.pathname);
+      };
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
+    }
+  }, []);
+
+  const navigateTo = (path: string) => {
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", path);
+      setActivePath(path);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   // Interactive exhibition tab selector
   const [selectedExhibitionId, setSelectedExhibitionId] = useState<string | null>(null);
+
+  // Dynamic share toast notification state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleShareEvent = async (evTitle: string, evDay: string, evMonth: string) => {
+    // Elegant sharing caption with location and hub details
+    const textToShare = `Come check out "${evTitle}" on ${evDay} ${evMonth} at Afro Baobab Cultural Hub, Dubai!\n\nExplore African heritage, djembe circles, and spectacular modern art exhibitions. Check schedule at Alserkal Avenue: ${window.location.origin}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: evTitle,
+          text: textToShare,
+          url: window.location.href
+        });
+        return;
+      } catch (err) {
+        console.log("Web share api declined or skipped, using copy clipboard alternative", err);
+      }
+    }
+    
+    try {
+      await navigator.clipboard.writeText(textToShare);
+      setToastMessage(`"Invite" copied to clipboard! Share it with friends.`);
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (err) {
+      alert(`Sharing details:\n${textToShare}`);
+    }
+  };
 
   // Authenticated state matching local storage
   const [isAdmin, setIsAdmin] = useState(
@@ -189,6 +208,13 @@ export default function App() {
   const triggerBooking = (type: 'school' | 'corporate' | 'general') => {
     setBookingType(type);
     setIsBookingOpen(true);
+  };
+
+  const openCustomPageBySlug = (slug: string) => {
+    const page = data?.customPages?.find(p => p.slug === slug);
+    if (page) {
+      setSelectedCustomPage(page);
+    }
   };
 
   const activeExhibition = data?.exhibitions.find(x => x.id === selectedExhibitionId);
@@ -296,6 +322,7 @@ export default function App() {
         header={data?.header}
         customPages={data?.customPages}
         onSelectPage={setSelectedCustomPage}
+        onSelectPageBySlug={navigateTo}
       />
 
       {loading ? (
@@ -306,6 +333,300 @@ export default function App() {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           <p className="font-serif italic font-light text-lg">Seeding Baobab Cultural roots ...</p>
+        </div>
+      ) : activePath === "/coming-soon" ? (
+        <ComingSoonBaobabPage navigateTo={navigateTo} header={data?.header} />
+      ) : activePath === "/schools" ? (
+        <div className="pt-24 min-h-screen bg-[#110a05] text-[#FAF8F4] overflow-hidden relative pb-20 selection:bg-clay selection:text-white flex flex-col justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1c120a] to-[#0c0805] -z-10" />
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[radial-gradient(#FAF8F4_1.5px,transparent_1.5px)] [background-size:24px_24px] -z-10 animate-pulse"></div>
+          
+          <div className="max-w-5xl mx-auto px-6 sm:px-10 py-12 sm:py-20 w-full space-y-16">
+            {/* Page Header */}
+            <div className="space-y-4 text-center sm:text-left">
+              <div className="text-[10px] tracking-widest text-[#CB6A4A] uppercase font-mono font-bold">
+                African Cultural Hub Dubai · School Field Trips
+              </div>
+              <h1 className="font-serif text-4xl sm:text-6xl font-light text-[#FAF8F4] tracking-tight leading-tight">
+                Educational Field Trips
+              </h1>
+              <p className="text-white/70 font-sans text-sm sm:text-base max-w-2xl leading-relaxed">
+                Our curriculum-aligned, hands-on immersive modules are custom-tailored to spark wonder, creativity, and deep cultural intelligence in students. Here is a preview of the interactive activities we conduct.
+              </p>
+            </div>
+
+            <TribalDivider light={true} />
+
+            {/* Practical Modules Grid with Real Images */}
+            <div className="space-y-8">
+              <h2 className="text-lg font-mono tracking-wider text-moss uppercase">✧ Core Field Trip Workshops</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Workshop 1 */}
+                <div className="bg-white/5 border border-white/10 rounded-[4px] overflow-hidden hover:border-clay/50 transition-all duration-300 group flex flex-col justify-between">
+                  <div className="relative h-48 overflow-hidden bg-black/40">
+                    <img 
+                      src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80" 
+                      alt="African drumming circle"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-clay text-white text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-[1px]">
+                      Rhythm Circle
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-serif font-light text-white group-hover:text-clay transition-colors">Master Rhythm & Drumming</h3>
+                      <p className="text-xs text-white/70 leading-relaxed font-sans mt-2 font-light">
+                        Authentic djembe drum alignment workshops led by our hub master percussionists. Students learn sequence, tempo, coordination, and cooperative pulse while sitting on pattern-woven stools in outdoor interactive drumming circles.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Workshop 2 */}
+                <div className="bg-white/5 border border-white/10 rounded-[4px] overflow-hidden hover:border-clay/50 transition-all duration-300 group flex flex-col justify-between">
+                  <div className="relative h-48 overflow-hidden bg-black/40">
+                    <img 
+                      src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80" 
+                      alt="Ancestral Face Paint dot art"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-moss text-white text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-[1px]">
+                      Face Paint & Lore
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-serif font-light text-white group-hover:text-moss transition-colors">Traditional Dot Painting</h3>
+                      <p className="text-xs text-white/70 leading-relaxed font-sans mt-2 font-light">
+                        Students learn ancestral design styles by receiving beautiful face paint motifs of fine white clay-based dots on their cheeks and foreheads. Sessions match safe organic cosmetic standards and pair face painting with local African children's folklore stories.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Workshop 3 */}
+                <div className="bg-white/5 border border-white/10 rounded-[4px] overflow-hidden hover:border-clay/50 transition-all duration-300 group flex flex-col justify-between">
+                  <div className="relative h-48 overflow-hidden bg-black/40">
+                    <img 
+                      src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80" 
+                      alt="Clay painting & Mask moulding"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-indigo text-white text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-[1px]">
+                      Art & Ceramics
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-serif font-light text-white group-hover:text-indigo-400 transition-colors">Clay Pot & Mask Painting</h3>
+                      <p className="text-xs text-white/70 leading-relaxed font-sans mt-2 font-light">
+                        A highly interactive hands-on art session where children mould classic clay vessels and use black, terracotta, and ochre paint tones to craft geometric African tribal shields and mask layouts, developing physical creative skills.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Workshop 4 */}
+                <div className="bg-white/5 border border-white/10 rounded-[4px] overflow-hidden hover:border-clay/50 transition-all duration-300 group flex flex-col justify-between">
+                  <div className="relative h-48 overflow-hidden bg-black/40">
+                    <img 
+                      src="https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80" 
+                      alt="Beading craft work"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-clay text-white text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-[1px]">
+                      Handcrafted Beads
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-serif font-light text-white group-hover:text-terracotta transition-colors">Mathematical Bead Threading</h3>
+                      <p className="text-xs text-white/70 leading-relaxed font-sans mt-2 font-light">
+                        Students discover geometrical symmetry, math structures, and ethnic meanings by assembling gorgeous vibrant beads onto necklaces and strings, matching real historical patterns under local UAE study topics.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Featured Showcase Item - Djembe line on Grass */}
+            <div className="bg-[#1c120a] border border-[#CB6A4A]/25 rounded-[4px] overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="h-64 lg:h-auto min-h-[240px] relative bg-black">
+                  <img 
+                    src="https://images.unsplash.com/photo-1543731068-7e0f5beff43a?auto=format&fit=crop&w=800&q=80" 
+                    alt="Row of detailed African djembe drums on grass"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover opacity-75"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1c120a]/80 hidden lg:block" />
+                </div>
+                <div className="p-8 flex flex-col justify-center space-y-4">
+                  <div className="text-[9px] tracking-[0.2em] text-[#CB6A4A] font-mono uppercase font-bold">Featured Hub Instrument Showcase</div>
+                  <h3 className="text-2xl font-serif text-white font-light">Laid Out Djembe Choir Gardens</h3>
+                  <p className="text-xs text-white/75 leading-relaxed font-sans font-light">
+                    Observe our magnificent array of authentic hand-carved ethnic djembe drums sitting neat on the lush lawns of our Dubai villa grounds. Students learn the rich construction parameters, regional wood craftmanship, and the dynamic musical dialogues passed down through centuries of West African heritage.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Curricular & Logistics Specs banner */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+              <div className="border border-[#CB6A4A]/20 bg-[#cb6a4a]/5 rounded-[3px] p-6 sm:p-8 space-y-4">
+                <h3 className="text-xl font-serif font-light text-white text-left">Curriculum Integration</h3>
+                <p className="text-xs text-white/80 font-sans leading-relaxed">
+                  Our programs are aligned carefully with standard world frameworks:
+                </p>
+                <ul className="space-y-2 text-xs text-white/70 list-disc list-inside font-sans pl-1">
+                  <li>Fully integrated with IB, American, British, CBSE, and MOE guidelines</li>
+                  <li>UAE Social Studies linked craftwork elements and heritage references</li>
+                  <li>In-depth teacher worksheets provided to continue the learnings in classrooms</li>
+                </ul>
+              </div>
+
+              <div className="border border-moss/20 bg-moss/5 rounded-[3px] p-6 sm:p-8 space-y-4">
+                <h3 className="text-xl font-serif font-light text-white text-left">Logistics & Capacity</h3>
+                <p className="text-xs text-white/80 font-sans leading-relaxed">
+                  Everything you need for a safe and synchronized visit setup:
+                </p>
+                <ul className="space-y-2 text-xs text-white/70 list-disc list-inside font-sans pl-1">
+                  <li>Accommodates student capacities of 20 up to 60 per active session</li>
+                  <li>Flexible morning field trip programs from 9:00 AM – 1:00 PM</li>
+                  <li>Dedicated bus parking and safe private courtyard spaces in Dubai</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 justify-center sm:justify-start">
+              <button
+                onClick={() => triggerBooking('school')}
+                className="w-full sm:w-auto bg-clay hover:bg-terracotta text-white font-mono uppercase tracking-widest text-[11px] px-8 py-4 rounded-[2px] transition-colors cursor-pointer shadow-md text-center"
+              >
+                Inquire School Visit ✦
+              </button>
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateTo('/');
+                }}
+                className="w-full sm:w-auto text-center border border-white/20 hover:border-white text-white/80 hover:text-white font-mono uppercase tracking-widest text-[11px] px-8 py-4 rounded-[2px] transition-all cursor-pointer"
+              >
+                ↩ Return to Main Hub
+              </a>
+            </div>
+          </div>
+          
+          <footer className="border-t border-white/5 py-8 text-center text-white/40 text-[10px] uppercase font-mono tracking-widest">
+            Afro Baobab Dubai · All Rights Reserved
+          </footer>
+        </div>
+      ) : activePath === "/corporate" ? (
+        <div className="pt-24 min-h-screen bg-[#0a0705] text-[#FAF8F4] overflow-hidden relative pb-20 selection:bg-clay selection:text-white flex flex-col justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#120d09] to-[#060403] -z-10" />
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[radial-gradient(#FAF8F4_1.5px,transparent_1.5px)] [background-size:24px_24px] -z-10"></div>
+          
+          <div className="max-w-4xl mx-auto px-6 sm:px-10 py-12 sm:py-20 w-full space-y-12">
+            {/* Page Header */}
+            <div className="space-y-4 text-center sm:text-left">
+              <div className="text-[10px] tracking-widest text-clay uppercase font-mono font-bold">
+                African Cultural Hub Dubai · Corporate Solutions
+              </div>
+              <h1 className="font-serif text-4xl sm:text-6xl font-light text-[#FAF8F4] tracking-tight leading-tight">
+                Corporate
+              </h1>
+              <p className="text-white/70 font-sans text-sm sm:text-base max-w-2xl leading-relaxed">
+                Grow collective resonance, deepen global mindset sensitivity, and ignite strategic innovation with tailored executive retreats at Dubai's premium cultural experience space.
+              </p>
+            </div>
+
+            <TribalDivider light={true} />
+
+            {/* Corporate Programs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div className="bg-white/5 border border-white/10 rounded-[4px] p-6 hover:border-clay/50 transition-all duration-300 space-y-3">
+                <div className="w-10 h-10 rounded-full bg-clay/20 flex items-center justify-center text-clay border border-clay/30">
+                  <Music className="w-5 h-5 text-clay animate-pulse" />
+                </div>
+                <h3 className="text-lg font-serif font-light text-white">Dynamic Rhythmic Synergy</h3>
+                <p className="text-xs text-white/70 leading-relaxed font-sans">
+                  Highly energetic djembe percussion sessions focusing on listening, non-verbal group response, and team alignment. Build a singular, synchronized brand pulse.
+                </p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-[4px] p-6 hover:border-moss/50 transition-all duration-300 space-y-3">
+                <div className="w-10 h-10 rounded-full bg-moss/20 flex items-center justify-center text-moss border border-moss/30">
+                  <CheckCircle2 className="w-5 h-5 text-moss" />
+                </div>
+                <h3 className="text-lg font-serif font-light text-white">Collaborative Bead Tapestry</h3>
+                <p className="text-xs text-white/70 leading-relaxed font-sans">
+                  An artistic visual assignment where team participants collaborate to build a majestic, large-scale beaded canvas reflecting the core synergistic vision of your organization.
+                </p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-[4px] p-6 hover:border-[#cb6a4a]/50 transition-all duration-300 space-y-3">
+                <div className="w-10 h-10 rounded-full bg-[#cb6a4a]/20 flex items-center justify-center text-[#cb6a4a] border border-[#cb6a4a]/30">
+                  <Users className="w-5 h-5 text-[#cb6a4a]" />
+                </div>
+                <h3 className="text-lg font-serif font-light text-white">Narrative Leadership Seminars</h3>
+                <p className="text-xs text-white/70 leading-relaxed font-sans px-0.5">
+                  Cultural training drawing insights from ancient council wisdom (Lezgara) to teach story-driven leadership, team empathy, and inclusive dialogue frameworks.
+                </p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-[4px] p-6 hover:border-indigo/50 transition-all duration-300 space-y-3">
+                <div className="w-10 h-10 rounded-full bg-indigo/20 flex items-center justify-center text-indigo border border-indigo/30">
+                  <Sparkles className="w-5 h-5 text-indigo" />
+                </div>
+                <h3 className="text-lg font-serif font-light text-white">communal Dining Experiences</h3>
+                <p className="text-xs text-white/70 leading-relaxed font-sans">
+                  Immersive sensory journeys incorporating ancestral storytelling, slow coffee roasting rituals, collaborative food sharing, and organic musical performance.
+                </p>
+              </div>
+            </div>
+
+            {/* Service Specs Banner */}
+            <div className="border border-moss/20 bg-moss/5 rounded-[3px] p-6 sm:p-8 space-y-4">
+              <h3 className="text-xl font-serif font-light text-white">Corporate buyouts & Amenities</h3>
+              <ul className="space-y-2 text-xs text-white/80 list-disc list-inside font-sans">
+                <li>Exclusive private access to our active Art Gallery, Meeting Salon, and Canopy Story room</li>
+                <li>Flexible setups accommodating up to 50 executives per team event</li>
+                <li>Fully integrated surround audio systems, modern presentation screens, and custom mocktail catering</li>
+              </ul>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+              <button
+                onClick={() => triggerBooking('corporate')}
+                className="w-full sm:w-auto bg-clay hover:bg-terracotta text-white font-mono uppercase tracking-widest text-[11px] px-8 py-4 rounded-[2px] transition-colors cursor-pointer shadow-md text-center"
+              >
+                Inquire Team Retreat ✦
+              </button>
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateTo('/');
+                }}
+                className="w-full sm:w-auto text-center border border-white/20 hover:border-white text-white/80 hover:text-white font-mono uppercase tracking-widest text-[11px] px-8 py-4 rounded-[2px] transition-all cursor-pointer"
+              >
+                ↩ Return to Main Hub
+              </a>
+            </div>
+          </div>
+          
+          <footer className="border-t border-white/5 py-8 text-center text-white/40 text-[10px] uppercase font-mono tracking-widest">
+            Afro Baobab Dubai · All Rights Reserved
+          </footer>
         </div>
       ) : (
         <>
@@ -475,90 +796,17 @@ export default function App() {
                       href={data?.header.heroBtn1Link || "#experiences"}
                       className="bg-clay hover:bg-terracotta text-white px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-medium transition-all shadow-md hover:-translate-y-[1px] inline-flex items-center"
                     >
-                      {data?.header.heroBtn1Text || "Plan a Visit"}
+                      {data?.header.heroBtn1Text || "Explore Experiences"}
                     </a>
-                    {data?.header.heroBtn2Text ? (
+                    {data?.header.heroBtn2Text && !data.header.heroBtn2Text.toLowerCase().includes("reserve a visit") && (
                       <a
                         href={data.header.heroBtn2Link || "#contact"}
                         className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer inline-flex items-center"
                       >
                         {data.header.heroBtn2Text}
                       </a>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => triggerBooking('school')}
-                          className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer"
-                        >
-                          For Schools
-                        </button>
-                        <button
-                          onClick={() => triggerBooking('corporate')}
-                          className="bg-transparent hover:border-clay hover:text-clay text-white/80 border border-white/20 px-8 py-3.5 rounded-[2px] text-xs tracking-widest uppercase font-light transition-all cursor-pointer"
-                        >
-                          For Corporates
-                        </button>
-                      </>
                     )}
                   </motion.div>
-
-                  {/* PROVERB SPOTLIGHT CARD */}
-                  {!data?.header?.hideProverbWidget && (
-                    !isProverbHiddenByVisitor ? (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.9, delay: 0.45 }}
-                        className="border border-sand/20 bg-[#120b06]/65 backdrop-blur-md rounded-[3px] p-5 max-w-lg w-full text-left shadow-2xl space-y-3 relative group/proverb"
-                      >
-                        <div className="flex justify-between items-center border-b border-sand/10 pb-2">
-                          <span className="text-[9px] tracking-[0.25em] font-mono text-clay font-bold uppercase flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-clay animate-pulse" /> Proverb of the Day
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setProverbIndex((prev) => (prev + 1) % PROVERBS.length)}
-                              className="text-[9px] tracking-widest text-[#CB6A4A] hover:text-white font-mono uppercase bg-[#CB6A4A]/10 hover:bg-[#CB6A4A] px-2 py-0.5 rounded-[2px] cursor-pointer transition-all border-0 font-bold"
-                              title="Read another ancient African wisdom proverb"
-                            >
-                              Cycle Wisdom ✦
-                            </button>
-                            <button
-                              onClick={() => setIsProverbHiddenByVisitor(true)}
-                              className="text-[9.5px] tracking-widest text-white/40 hover:text-[#CB6A4A] font-mono uppercase hover:bg-white/5 px-2 py-0.5 rounded-[2px] cursor-pointer transition-all border-0 font-medium"
-                              title="Hide Proverb of the Day"
-                            >
-                              ✕ Hide
-                            </button>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[13px] font-serif text-white italic leading-relaxed">
-                            "{PROVERBS[proverbIndex].quote}"
-                          </p>
-                          <p className="text-[11px] text-white/65 font-sans leading-relaxed">
-                            <strong className="text-clay/90 font-mono text-[9px] uppercase tracking-wider block mt-1">Cosmic Philosophy:</strong>
-                            {PROVERBS[proverbIndex].meaning}
-                          </p>
-                        </div>
-                        <div className="flex justify-between items-center pt-1 border-t border-sand/5">
-                          <span className="text-[10px] text-white/40 font-mono">
-                            — {PROVERBS[proverbIndex].origin}
-                          </span>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.button
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        onClick={() => setIsProverbHiddenByVisitor(false)}
-                        className="text-[10px] tracking-[0.18em] text-sand/60 hover:text-white font-mono uppercase bg-[#120b06]/40 hover:bg-[#120b06]/85 border border-sand/20 hover:border-clay/50 px-4 py-2.5 rounded-[3px] cursor-pointer transition-all flex items-center gap-2"
-                        title="Show Proverb of the Day"
-                      >
-                        <Sparkles className="w-3 h-3 text-clay animate-pulse" /> Show Wisdom Spotlight
-                      </motion.button>
-                    )
-                  )}
                 </div>
               );
             })()}
@@ -648,17 +896,7 @@ export default function App() {
             </section>
           )}
 
-          {/* HERITAGE SYMBOLS & PATTERNS INTERACTIVE CANVAS */}
-          {data?.header.showHeritage !== false && (
-            <HeritageMotifs
-              label={data?.header.heritageLabel}
-              title={data?.header.heritageTitle}
-              subTitle={data?.header.heritageSubTitle}
-              design={data?.header.heritageDesign}
-            />
-          )}
-
-          {data?.header.showHeritage !== false && data?.header.showExperiences !== false && <TribalDivider />}
+          <TribalDivider />
 
           {/* DYNAMIC EXPERIENCES */}
           {data?.header.showExperiences !== false && (
@@ -680,12 +918,6 @@ export default function App() {
                       </p>
                     )}
                   </div>
-                  <button
-                    onClick={() => triggerBooking('general')}
-                    className="bg-transparent hover:border-clay hover:text-clay text-white/50 border border-white/10 px-6 py-2.5 rounded-[2px] text-xs font-mono uppercase tracking-widest transition-all cursor-pointer"
-                  >
-                    Book Private Tour
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[1.5px] bg-[#2e2318] border border-sand/10">
@@ -725,166 +957,145 @@ export default function App() {
             </section>
           )}
 
-          {/* DYNAMIC EXHIBITIONS */}
-          {data?.header.showExhibitions !== false && (
-            <section className="bg-sand text-charcoal py-24 px-[5vw] relative overflow-hidden" id="exhibitions">
-              {/* Textured woven mudcloth background */}
-              <div className="absolute inset-0 bg-pattern-mudcloth opacity-[0.25] pointer-events-none"></div>
-              
-              <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center relative z-10">
-                <div>
-                  <div className="label !text-moss">{data?.header.exhibitionsLabel || "Current & Upcoming"}</div>
-                  <h2
-                    className="font-serif text-4xl sm:text-5xl font-light text-charcoal leading-tight"
-                    dangerouslySetInnerHTML={{ __html: data?.header.exhibitionsTitle || "Where Every Wall <br />Tells a <span class=\"text-terracotta italic\">Story</span>" }}
-                  />
-                  <p className="text-charcoal/70 text-sm leading-relaxed mt-4 max-w-md">
-                    {data?.header.exhibitionsSubTitle || "Our gallery rotates with living exhibitions that cross cultures, geographies, and generations. Touch, listen, edit, and discover."}
-                  </p>
+          {/* THEMES & CONTENT PILLARS (HOMEPAGE BRAND IDENTITY INTEGRATION) */}
+          <section className="bg-ivory border-t border-b border-sand/30 py-24 px-[5vw] relative overflow-hidden" id="brand-pillars">
+            {/* Hand-drawn geometric pattern grid backdrops */}
+            <div className="absolute left-6 top-12 opacity-5 select-none text-clay font-mono text-[9px] tracking-widest leading-none pointer-events-none">
+              ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦<br/>
+              ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦<br/>
+              ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦<br/>
+              ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦<br/>
+            </div>
 
-                  {/* Left Active Exhibition details card preview */}
-                  {activeExhibition && (
-                    <div className="mt-8 bg-white/60 backdrop-blur-sm border border-sand rounded-[2px] max-w-md overflow-hidden shadow-md animate-fadeIn clay-inset-border">
-                      {activeExhibition.imageUrl && (
-                        <div className="h-44 w-full bg-charcoal/10 overflow-hidden relative">
-                          <img
-                            src={activeExhibition.imageUrl}
-                            alt={activeExhibition.title}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        </div>
-                      )}
-                      <div className="p-6 space-y-3">
-                        <span className="text-[10px] tracking-widest uppercase font-mono text-clay font-bold block">
-                          {activeExhibition.status === 'Now' ? "ACTIVE EXHIBITION" : `UPCOMING EXHIBITION: ${activeExhibition.status}`}
-                        </span>
-                        <h4 className="font-serif text-charcoal text-xl font-medium leading-snug">
-                          {activeExhibition.title}
-                        </h4>
-                        <p className="text-charcoal/60 text-xs font-mono font-medium">{activeExhibition.type}</p>
-                        <button
-                          onClick={() => triggerBooking('general')}
-                          className="text-clay hover:text-terracotta text-xs font-mono tracking-widest uppercase flex items-center gap-1.5 pt-2 cursor-pointer"
-                        >
-                          Plan Visit For This Exhibition <ArrowUpRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
+            <div className="max-w-7xl mx-auto relative z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                {/* Visual Label Column */}
+                <div className="lg:col-span-12 xl:col-span-5 space-y-6">
+                  <div className="label">The Baobab DNA</div>
+                  <h2 className="font-serif text-4xl sm:text-5xl font-light text-[#301C11] leading-tight">
+                    Themes &amp;<br/>
+                    <span className="italic text-clay">Content Pillars</span>
+                  </h2>
+                  <p className="text-sm font-sans text-[#5F564F] leading-relaxed max-w-md">
+                    Afro Baobab is built upon five foundational storytelling themes. They anchor our contemporary culture, ensuring everything is rooted in authentic heritage and designed for tomorrow.
+                  </p>
+                  
+                  {/* Subtle checklist panel matching 'DESIGN ELEMENTS' column */}
+                  <div className="pt-6 border-t border-sand/20 space-y-3">
+                    <span className="text-[10px] tracking-widest font-mono font-bold text-clay uppercase block">
+                      OUR BRAND DESIGN DNA
+                    </span>
+                    <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] font-sans text-[#5F564F] font-medium uppercase tracking-wider">
+                      <li className="flex items-center gap-1.5"><span className="text-clay text-xs">✦</span> Bold Typography</li>
+                      <li className="flex items-center gap-1.5"><span className="text-clay text-xs">✦</span> Organic Shapes</li>
+                      <li className="flex items-center gap-1.5"><span className="text-clay text-xs">✦</span> Earth Textures</li>
+                      <li className="flex items-center gap-1.5"><span className="text-clay text-xs">✦</span> Matrix Patterns</li>
+                      <li className="flex items-center gap-1.5"><span className="text-clay text-xs">✦</span> Deep Contrasts</li>
+                      <li className="flex items-center gap-1.5"><span className="text-clay text-xs">✦</span> Negative Space</li>
+                    </ul>
+                  </div>
                 </div>
 
-                {/* Dynamic Exhibitions interactive list wrapper */}
-                <div className="space-y-2">
-                  {data?.exhibitions.map((exh) => (
+                {/* Vertical Pillars Showcase */}
+                <div className="lg:col-span-12 xl:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    {
+                      id: "01",
+                      title: "JOURNEY",
+                      desc: "Experiences that transform.",
+                      color: "bg-[#713f27] text-white",
+                      svg: (
+                        <svg className="w-5 h-5 text-sand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <circle cx="12" cy="12" r="10" strokeDasharray="3 3" />
+                          <circle cx="12" cy="12" r="5" strokeDasharray="1.5 1.5" />
+                          <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "02",
+                      title: "STORIES",
+                      desc: "Sharing voices, history and wisdom.",
+                      color: "bg-[#1F2A44] text-white",
+                      svg: (
+                        <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M2 10q5-4 10 0t10 0" strokeLinecap="round" />
+                          <path d="M2 14q5-4 10 0t10 0" strokeLinecap="round" opacity="0.7" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "03",
+                      title: "CREATIVITY",
+                      desc: "Art, music, craft and expression.",
+                      color: "bg-[#55624A] text-white",
+                      svg: (
+                        <svg className="w-5 h-5 text-sand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <circle cx="12" cy="12" r="4" stroke="currentColor" />
+                          <circle cx="12" cy="12" r="8" stroke="currentColor" strokeDasharray="2 2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "04",
+                      title: "COMMUNITY",
+                      desc: "People, connection and belonging.",
+                      color: "bg-[#CB6A4A] text-white",
+                      svg: (
+                        <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "05",
+                      title: "HERITAGE",
+                      desc: "Rooted in culture, inspired by tomorrow.",
+                      color: "bg-[#0a0604] border border-[#F7F4EF]/25 text-white",
+                      svg: (
+                        <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="3" width="18" height="18" rx="1" />
+                          <path d="M3 12h18M12 3v18" strokeLinecap="round" opacity="0.4" />
+                        </svg>
+                      )
+                    }
+                  ].map((p) => (
                     <div
-                      key={exh.id}
-                      onClick={() => setSelectedExhibitionId(exh.id)}
-                      className={`p-5 rounded-[2px] flex items-center justify-between gap-4 cursor-pointer transition-all duration-200 border-l-[3px] ${
-                        selectedExhibitionId === exh.id
-                          ? "bg-white border-l-terracotta shadow-md translate-x-1"
-                          : "bg-white/40 border-l-transparent hover:bg-white/70"
-                      }`}
+                      key={p.title}
+                      className="flex items-center gap-4 p-5 bg-white border border-sand/20 hover:border-clay/35 transition-all rounded-[3px] group shadow-xs"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-8 h-8 rounded-full font-serif flex items-center justify-center text-xs font-medium ${
-                          selectedExhibitionId === exh.id ? "bg-clay text-white" : "bg-charcoal/10 text-charcoal/60"
-                        }`}>
-                          {exh.badge}
-                        </div>
-                        <div>
-                          <h4 className="font-serif text-charcoal font-medium text-sm sm:text-base leading-tight">
-                            {exh.title}
-                          </h4>
-                          <span className="text-[10px] text-charcoal/40 font-mono mt-0.5 block">{exh.type}</span>
-                        </div>
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${p.color} shadow-sm`}>
+                        {p.svg}
                       </div>
-
-                      <span className={`px-2.5 py-0.5 rounded-[2px] text-[9px] font-mono uppercase text-nowrap font-medium ${
-                        exh.isNow ? "bg-clay text-white" : "bg-moss/10 text-moss"
-                      }`}>
-                        {exh.status}
-                      </span>
+                      <div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-mono text-[8px] tracking-wider text-clay font-bold">{p.id}</span>
+                          <h4 className="font-serif text-base font-semibold text-charcoal uppercase group-hover:text-clay transition-colors">
+                            {p.title}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-[#5F564F] leading-normal font-light">
+                          {p.desc}
+                        </p>
+                      </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {data?.header.showSchools !== false && <TribalDivider />}
-
-          {/* PATHWAYS FOR SCHOOLS & CORPS */}
-          {data?.header.showSchools !== false && (
-            <section className="py-24 px-[5vw]" id="schools">
-              <div className="max-w-7xl mx-auto space-y-12">
-                <div className="text-center max-w-xl mx-auto space-y-4">
-                  <div className="label justify-center">{data?.header.schoolsLabel || "Who We Welcome"}</div>
-                  <h2
-                    className="font-serif text-4xl sm:text-5xl font-light text-charcoal"
-                    dangerouslySetInnerHTML={{ __html: data?.header.schoolsTitle || "Designed for Every <span class=\"text-clay italic\">Curious Mind</span>" }}
-                  />
-                  <p className="text-[#6a6059] text-sm leading-relaxed max-w-md mx-auto">
-                    {data?.header.schoolsSubTitle || "Whether you are an educator seeking curriculum-focused learning or a group seeking to build cultural intelligence, we have tailored path programs."}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* School card */}
-                  <div className="bg-indigo text-white p-8 sm:p-12 rounded-[4px] relative overflow-hidden flex flex-col justify-end min-h-[420px] shadow-lg border border-sand/5 clay-inset-border group">
-                    <div className="absolute inset-0 opacity-[0.12] pointer-events-none bg-pattern-kente"></div>
-                    <div className="relative space-y-4 max-w-md z-10">
-                      <span className="text-[#E7D6BA]/60 text-[10px] tracking-widest uppercase font-mono block font-semibold">For Schools</span>
-                      <h3 className="font-serif text-3xl font-light leading-snug group-hover:text-sand transition-colors">School &amp; Educational Visits</h3>
-                      <p className="text-[#E7D6BA]/70 text-xs leading-relaxed font-sans font-light">
-                        Interactive school field-trips for all grades. Modules combine Gallery walk, Baobab Storytelling under canopy, Rhythm circles, and raw clay workshops matching UAE social studies.
-                      </p>
-                      <div className="flex gap-2 flex-wrap pt-2">
-                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Curriculum Linked</span>
-                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Hands-on Workshops</span>
-                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">All Grades</span>
-                      </div>
-                      <div className="pt-2">
-                        <button
-                          onClick={() => triggerBooking('school')}
-                          className="bg-transparent hover:bg-white/5 border border-[#E7D6BA]/30 hover:border-clay text-[0.68rem] font-mono tracking-widest text-[#E7D6BA] hover:text-clay uppercase py-2.5 px-6 rounded-[2px] transition-all cursor-pointer"
-                        >
-                          Request School Pack
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Corp card */}
-                  <div className="bg-charcoal text-white p-8 sm:p-12 rounded-[4px] relative overflow-hidden flex flex-col justify-end min-h-[420px] shadow-lg border border-sand/5 clay-inset-border group">
-                    <div className="absolute inset-0 opacity-[0.08] pointer-events-none bg-pattern-mudcloth"></div>
-                    <div className="relative space-y-4 max-w-md z-10">
-                      <span className="text-clay/80 text-[10px] tracking-widest uppercase font-mono block font-semibold animate-pulse">For Organizations</span>
-                      <h3 className="font-serif text-3xl font-light leading-snug group-hover:text-clay transition-colors">Corporate Team Integration</h3>
-                      <p className="text-white/50 text-xs leading-relaxed font-sans font-light">
-                        DEI retreats, global team-building workshops, and client appreciation hosting opportunities. Built around shared creative challenge, food storytelling, and cultural intelligence.
-                      </p>
-                      <div className="flex gap-2 flex-wrap pt-2">
-                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Cultural Intelligence</span>
-                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">DEI Focus</span>
-                        <span className="bg-white/10 px-2 py-0.5 rounded-[2px] text-[9px] font-mono">Private Dinners</span>
-                      </div>
-                      <div className="pt-2">
-                        <button
-                          onClick={() => triggerBooking('corporate')}
-                          className="bg-clay hover:bg-terracotta text-white text-[0.68rem] font-mono tracking-widest uppercase py-2.5 px-6 rounded-[2px] transition-colors cursor-pointer shadow-md inline-block"
-                        >
-                          Design An Experience
-                        </button>
-                      </div>
-                    </div>
+                  
+                  {/* Digital shuttle micro-banner element */}
+                  <div className="flex items-center justify-between p-5 bg-clay/[0.04] border border-dashed border-clay/20 rounded-[3px] sm:col-span-2">
+                    <span className="font-mono text-[9px] tracking-widest text-[#CB6A4A] font-bold uppercase">✦ IMMERSIVE RECRUITS</span>
+                    <a href="#heritage-art" className="font-mono text-[9px] text-[#CB6A4A] hover:underline font-bold uppercase transition-all">Weave Textiles Now →</a>
                   </div>
                 </div>
-              </div>
-            </section>
-          )}
 
-          <TribalDivider />
+              </div>
+            </div>
+          </section>
+
+          {/* GALLERY CAROUSEL */}
+          <GalleryCarousel slides={data?.carouselSlides || []} />
 
           {/* QUOTE BANNER */}
           <div className="bg-terracotta py-24 text-center px-[5vw] relative overflow-hidden">
@@ -916,12 +1127,6 @@ export default function App() {
                       </p>
                     )}
                   </div>
-                  <button
-                    onClick={() => triggerBooking('general')}
-                    className="bg-clay hover:bg-terracotta text-white font-mono uppercase text-xs tracking-widest px-6 py-3 rounded-[2px] transition-colors cursor-pointer shadow-sm"
-                  >
-                    Book Events Custom Seat
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -966,10 +1171,20 @@ export default function App() {
                           </h4>
                         </div>
 
-                        <div className="text-[10px] text-charcoal/50 flex gap-2 pt-3 border-t border-sand/10 font-mono">
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {evItem.time}</span>
-                          <span>·</span>
-                          <span>{evItem.audience}</span>
+                        <div className="pt-3 border-t border-sand/10 flex items-center justify-between gap-2">
+                          <div className="text-[10px] text-charcoal/50 flex gap-2 font-mono">
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {evItem.time}</span>
+                            <span>·</span>
+                            <span>{evItem.audience}</span>
+                          </div>
+                          
+                          <button
+                            onClick={() => handleShareEvent(evItem.title, evItem.day, evItem.month)}
+                            className="text-[#cb6a4a] hover:text-terracotta p-1 hover:bg-[#cb6a4a]/5 rounded transition-all flex items-center gap-1 text-[10px] font-mono font-medium cursor-pointer border border-[#cb6a4a]/10"
+                            title="Share/Copy Invite Details"
+                          >
+                            <Share2 className="w-3.5 h-3.5" /> Share
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1071,9 +1286,31 @@ export default function App() {
               <div>
                 <div className="text-[10px] tracking-widest text-white/40 uppercase font-mono font-medium mb-4">Programs</div>
                 <ul className="space-y-2 list-none p-0 m-0 text-xs">
-                  <li><button onClick={() => triggerBooking('school')} className="hover:text-clay transition-colors text-left">Schools Field Trip</button></li>
-                  <li><button onClick={() => triggerBooking('corporate')} className="hover:text-clay transition-colors text-left">DEI Corporate Team</button></li>
-                  <li><button onClick={() => triggerBooking('general')} className="hover:text-clay transition-colors text-left">Inquire Custom Spot</button></li>
+                  <li>
+                    <a
+                      href="/schools"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigateTo('/schools');
+                      }}
+                      className="hover:text-clay transition-colors text-left cursor-pointer"
+                    >
+                      Schools
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/corporate"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigateTo('/corporate');
+                      }}
+                      className="hover:text-clay transition-colors text-left cursor-pointer"
+                    >
+                      Corporate
+                    </a>
+                  </li>
+                  <li><button onClick={() => triggerBooking('general')} className="hover:text-clay transition-colors text-left cursor-pointer">Inquire Custom Spot</button></li>
                 </ul>
               </div>
 
@@ -1110,6 +1347,12 @@ export default function App() {
                 {data?.header.socialYoutube && (
                   <a href={data.header.socialYoutube} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">YouTube</a>
                 )}
+                {data?.header.socialLinkedin && (
+                  <a href={data.header.socialLinkedin} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">LinkedIn</a>
+                )}
+                {data?.header.customSocials && data.header.customSocials.map((social) => (
+                  <a key={social.id} href={social.url} target="_blank" rel="noreferrer" className="hover:text-clay transition-colors">{social.name}</a>
+                ))}
               </div>
             </div>
           </footer>
@@ -1314,11 +1557,37 @@ export default function App() {
           title="Chat on WhatsApp"
         >
           <MessageCircle className="w-5 h-5" />
-          <span className="text-xs font-sans font-semibold tracking-wide text-white">
+          <span className="text-xs font-sans font-semibold tracking-wide text-white font-serif">
             WhatsApp Chat
           </span>
         </a>
       )}
+
+      {/* Toast Notification Portal */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 right-5 md:right-8 z-55 bg-[#120b06] border border-[#cb6a4a]/30 text-white py-3 px-4 rounded-[2px] shadow-2xl flex items-center gap-3 max-w-sm backdrop-blur-md"
+          >
+            <div className="bg-[#cb6a4a]/10 p-1.5 rounded-full border border-[#cb6a4a]/20 text-[#cb6a4a] shrink-0">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <div className="flex-grow">
+              <p className="text-[9px] font-mono tracking-widest uppercase text-white/40 font-bold">HUB MESSAGE</p>
+              <p className="text-xs font-sans font-medium text-white/90 leading-tight mt-0.5">{toastMessage}</p>
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="text-white/40 hover:text-[#cb6a4a] p-1 rounded-full cursor-pointer transition-colors shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
